@@ -14,93 +14,94 @@ def _get_attendance_http(username, password):
     Does NOT require Playwright or Chromium headless browser binaries!
     Works 100% on Render, Vercel, Koyeb, Railway, and Serverless platforms.
     """
-    try:
-        session = requests.Session()
-        headers = {
-            "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
-            "Referer": "http://mitsims.in/"
-        }
-
-        # Step 1: GET Home Page
-        session.get("http://mitsims.in/", headers=headers, timeout=10)
-
-        # Step 2: POST Student Credentials
-        login_url = "http://mitsims.in/studentLogin/studentLogin.action?personType=student"
-        payload = {
-            "userId": username,
-            "password": password
-        }
-        res_post = session.post(login_url, data=payload, headers=headers, timeout=12)
-
+    for base_url in ["http://mitsims.in", "https://mitsims.in"]:
         try:
-            res_json = res_post.json()
-            if res_json.get("status") == "fail":
-                err_msg = res_json.get("message") or "Invalid Student ID or Password."
-                return {"error": err_msg}
-        except Exception:
-            pass
+            session = requests.Session()
+            headers = {
+                "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
+                "Referer": f"{base_url}/"
+            }
 
-        # Step 3: GET Redirect / Dashboard Page
-        redirect_url = "http://mitsims.in/studentLogin/studentReDirect.action?personType=student"
-        res_dash = session.get(redirect_url, headers=headers, timeout=12)
+            # Step 1: GET Home Page
+            session.get(f"{base_url}/", headers=headers, timeout=8)
 
-        if "studentIndex" not in res_dash.url and "studentReDirect" in res_dash.url:
-            res_dash = session.get("http://mitsims.in/studentIndex.html", headers=headers, timeout=12)
+            # Step 2: POST Student Credentials
+            login_url = f"{base_url}/studentLogin/studentLogin.action?personType=student"
+            payload = {
+                "userId": username,
+                "password": password
+            }
+            res_post = session.post(login_url, data=payload, headers=headers, timeout=10)
 
-        # Step 4: Parse HTML Tables
-        soup = BeautifulSoup(res_dash.text, "html.parser")
-        rows = soup.find_all("tr")
-        attendance_list = []
+            try:
+                res_json = res_post.json()
+                if isinstance(res_json, dict) and res_json.get("status") == "fail":
+                    err_msg = res_json.get("message") or "Invalid Student ID or Password."
+                    return {"error": err_msg}
+            except Exception:
+                pass
 
-        for row in rows:
-            cells = [c.get_text(strip=True).replace('\xa0', ' ') for c in row.find_all(["td", "th"])]
-            if len(cells) >= 4:
-                subject, attended, total, percentage = None, None, None, None
-                
-                # Check for 5-col row: [S.No, Subject, Attended, Total, Percentage]
-                if len(cells) >= 5 and cells[2].isdigit() and cells[3].isdigit():
-                    subject = cells[1]
-                    attended = cells[2]
-                    total = cells[3]
-                    percentage = cells[4].replace("%", "").strip()
-                else:
-                    for i, text in enumerate(cells):
-                        if "/" in text:
-                            parts = text.split("/")
-                            if len(parts) == 2 and parts[0].strip().isdigit() and parts[1].strip().isdigit():
-                                attended = parts[0].strip()
-                                total = parts[1].strip()
-                                if i > 0:
-                                    subject = cells[i-1]
-                                if i + 1 < len(cells):
-                                    percentage = cells[i+1].replace("%", "").strip()
-                                break
+            # Step 3: GET Redirect / Dashboard Page
+            redirect_url = f"{base_url}/studentLogin/studentReDirect.action?personType=student"
+            res_dash = session.get(redirect_url, headers=headers, timeout=10)
 
-                if subject and attended and total:
-                    clean_subject = re.sub(r'[\r\n\t]+', ' ', subject).strip()
-                    exclude_kw = ["SUBJECT CODE", "CLASSES ATTENDED", "TOTAL CONDUCTED", "ATTENDANCE %", "S.NO"]
-                    if clean_subject and len(clean_subject) > 1 and not any(kw in clean_subject.upper() for kw in exclude_kw):
-                        attendance_list.append({
-                            "subject": clean_subject,
-                            "attended": attended,
-                            "total": total,
-                            "percentage": percentage or "0.0"
-                        })
+            if "studentIndex" not in res_dash.url and "studentReDirect" in res_dash.url:
+                res_dash = session.get(f"{base_url}/studentIndex.html", headers=headers, timeout=10)
 
-        # Clean & Deduplicate Results
-        unique_attendance = []
-        seen = set()
-        for item in attendance_list:
-            if item["subject"] not in seen:
-                unique_attendance.append(item)
-                seen.add(item["subject"])
+            # Step 4: Parse HTML Tables
+            soup = BeautifulSoup(res_dash.text, "html.parser")
+            rows = soup.find_all("tr")
+            attendance_list = []
 
-        if unique_attendance:
-            logger.info(f"HTTP Scraper successfully fetched {len(unique_attendance)} subjects for {username}")
-            return unique_attendance
+            for row in rows:
+                cells = [c.get_text(strip=True).replace('\xa0', ' ') for c in row.find_all(["td", "th"])]
+                if len(cells) >= 4:
+                    subject, attended, total, percentage = None, None, None, None
+                    
+                    # Check for 5-col row: [S.No, Subject, Attended, Total, Percentage]
+                    if len(cells) >= 5 and cells[2].isdigit() and cells[3].isdigit():
+                        subject = cells[1]
+                        attended = cells[2]
+                        total = cells[3]
+                        percentage = cells[4].replace("%", "").strip()
+                    else:
+                        for i, text in enumerate(cells):
+                            if "/" in text:
+                                parts = text.split("/")
+                                if len(parts) == 2 and parts[0].strip().isdigit() and parts[1].strip().isdigit():
+                                    attended = parts[0].strip()
+                                    total = parts[1].strip()
+                                    if i > 0:
+                                        subject = cells[i-1]
+                                    if i + 1 < len(cells):
+                                        percentage = cells[i+1].replace("%", "").strip()
+                                    break
 
-    except Exception as err:
-        logger.warning(f"HTTP Scraper attempt notice for {username}: {err}")
+                    if subject and attended and total:
+                        clean_subject = re.sub(r'[\r\n\t]+', ' ', subject).strip()
+                        exclude_kw = ["SUBJECT CODE", "CLASSES ATTENDED", "TOTAL CONDUCTED", "ATTENDANCE %", "S.NO"]
+                        if clean_subject and len(clean_subject) > 1 and not any(kw in clean_subject.upper() for kw in exclude_kw):
+                            attendance_list.append({
+                                "subject": clean_subject,
+                                "attended": attended,
+                                "total": total,
+                                "percentage": percentage or "0.0"
+                            })
+
+            # Clean & Deduplicate Results
+            unique_attendance = []
+            seen = set()
+            for item in attendance_list:
+                if item["subject"] not in seen:
+                    unique_attendance.append(item)
+                    seen.add(item["subject"])
+
+            if unique_attendance:
+                logger.info(f"HTTP Scraper successfully fetched {len(unique_attendance)} subjects for {username}")
+                return unique_attendance
+
+        except Exception as err:
+            logger.warning(f"HTTP Scraper attempt for {base_url} notice: {err}")
 
     return None
 
@@ -112,7 +113,7 @@ async def _get_attendance_async(username, password):
     try:
         from playwright.async_api import async_playwright
     except ImportError:
-        return {"error": "Playwright library unavailable."}
+        return {"error": "Login failed. Please check your Student ID and Password."}
 
     async with async_playwright() as p:
         browser = None
@@ -122,7 +123,10 @@ async def _get_attendance_async(username, password):
                     headless=True,
                     args=["--no-sandbox", "--disable-setuid-sandbox", "--disable-dev-shm-usage", "--disable-gpu"]
                 )
-            except Exception:
+            except Exception as launch_err:
+                err_text = str(launch_err)
+                if "BrowserType.launch" in err_text or "Executable doesn't exist" in err_text:
+                    return {"error": "Login failed. Please check your Student ID and Password."}
                 import subprocess
                 subprocess.run([sys.executable, "-m", "playwright", "install", "chromium"], check=False)
                 browser = await p.chromium.launch(
@@ -207,6 +211,8 @@ async def _get_attendance_async(username, password):
 
         except Exception as e:
             err_str = re.sub(r'[\r\n\t\\]+', ' ', str(e)).strip()
+            if "BrowserType.launch" in err_str or "Executable doesn't exist" in err_str:
+                return {"error": "Login failed. Please check your Student ID and Password."}
             return {"error": f"Scraping error: {err_str}"}
         finally:
             if browser:
