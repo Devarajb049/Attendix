@@ -8,10 +8,70 @@ from bs4 import BeautifulSoup
 logger = logging.getLogger("mits_ims_web")
 
 
+def parse_mits_dashboard_html(html_text):
+    """
+    Parses ExtJS panel displayfields from MITS IMS dashboard.action output.
+    Extracts course code, title, attended count, total conducted, and percentage.
+    """
+    values = re.findall(r"value\s*:\s*\\?['\"](<span.*?>.*?</span>)", html_text, re.DOTALL)
+    clean = []
+    for m in values:
+        t = BeautifulSoup(m, "html.parser").get_text(strip=True)
+        if t:
+            clean.append(t)
+
+    # 1. Map Subject Codes to full Subject Titles
+    subject_map = {}
+    for i in range(len(clean) - 1):
+        item = clean[i]
+        next_item = clean[i+1]
+        if (re.match(r'^[A-Z0-9]{4,10}$', item) or item in ["SOFTSKILLS", "APPTITUDE"]) and not next_item.isdigit() and len(next_item) > 2:
+            if not next_item.startswith("Email:"):
+                subject_map[item] = f"{item} - {next_item}" if item not in next_item else next_item
+
+    # 2. Extract Attendance Records from Panel 2 (CLASSES ATTENDED, TOTAL CONDUCTED, ATTENDANCE %)
+    results = []
+    start_idx = -1
+    for idx, text in enumerate(clean):
+        if "ATTENDANCE %" in text.upper():
+            start_idx = idx + 1
+            break
+
+    if start_idx != -1:
+        curr = start_idx
+        while curr < len(clean):
+            sno = clean[curr]
+            if sno == "Note :" or "NOTE" in sno.upper():
+                break
+            if sno.isdigit() and curr + 4 < len(clean):
+                code_or_name = clean[curr + 1]
+                attended_raw = clean[curr + 2]
+                total_raw = clean[curr + 3]
+                perc_raw = clean[curr + 4]
+
+                display_name = subject_map.get(code_or_name, code_or_name)
+                att_val = "0" if attended_raw == "-" else attended_raw
+                tot_val = "0" if total_raw == "-" else total_raw
+                perc_val = "0.0" if perc_raw == "-" else perc_raw.replace("%", "").strip()
+
+                if att_val.isdigit() and tot_val.isdigit():
+                    results.append({
+                        "subject": display_name,
+                        "attended": att_val,
+                        "total": tot_val,
+                        "percentage": perc_val
+                    })
+                curr += 5
+            else:
+                curr += 1
+
+    return results
+
+
 def _get_attendance_http(username, password):
     """
-    Lightweight, ultra-fast (0.2s) HTTP scraper for MITS IMS.
-    Does NOT require Playwright or Chromium headless browser binaries!
+    Ultra-fast (0.2s) HTTP Scraper for MITS IMS.
+    Does NOT require Playwright or Chromium binaries!
     Works 100% on Render, Vercel, Koyeb, Railway, and Serverless platforms.
     """
     for base_url in ["http://mitsims.in", "https://mitsims.in"]:
@@ -22,10 +82,10 @@ def _get_attendance_http(username, password):
                 "Referer": f"{base_url}/"
             }
 
-            # Step 1: GET Home Page
+            # 1. GET Home Page to initialize cookies
             session.get(f"{base_url}/", headers=headers, timeout=8)
 
-            # Step 2: POST Student Credentials
+            # 2. POST Student Credentials to studentLogin.action
             login_url = f"{base_url}/studentLogin/studentLogin.action?personType=student"
             payload = {
                 "userId": username,
@@ -41,64 +101,15 @@ def _get_attendance_http(username, password):
             except Exception:
                 pass
 
-            # Step 3: GET Redirect / Dashboard Page
-            redirect_url = f"{base_url}/studentLogin/studentReDirect.action?personType=student"
-            res_dash = session.get(redirect_url, headers=headers, timeout=10)
+            # 3. GET Dashboard View Endpoint directly
+            dash_url = f"{base_url}/gemsonline-student/dashboard.action?actionType=view"
+            res_dash = session.get(dash_url, headers=headers, timeout=10)
 
-            if "studentIndex" not in res_dash.url and "studentReDirect" in res_dash.url:
-                res_dash = session.get(f"{base_url}/studentIndex.html", headers=headers, timeout=10)
-
-            # Step 4: Parse HTML Tables
-            soup = BeautifulSoup(res_dash.text, "html.parser")
-            rows = soup.find_all("tr")
-            attendance_list = []
-
-            for row in rows:
-                cells = [c.get_text(strip=True).replace('\xa0', ' ') for c in row.find_all(["td", "th"])]
-                if len(cells) >= 4:
-                    subject, attended, total, percentage = None, None, None, None
-                    
-                    # Check for 5-col row: [S.No, Subject, Attended, Total, Percentage]
-                    if len(cells) >= 5 and cells[2].isdigit() and cells[3].isdigit():
-                        subject = cells[1]
-                        attended = cells[2]
-                        total = cells[3]
-                        percentage = cells[4].replace("%", "").strip()
-                    else:
-                        for i, text in enumerate(cells):
-                            if "/" in text:
-                                parts = text.split("/")
-                                if len(parts) == 2 and parts[0].strip().isdigit() and parts[1].strip().isdigit():
-                                    attended = parts[0].strip()
-                                    total = parts[1].strip()
-                                    if i > 0:
-                                        subject = cells[i-1]
-                                    if i + 1 < len(cells):
-                                        percentage = cells[i+1].replace("%", "").strip()
-                                    break
-
-                    if subject and attended and total:
-                        clean_subject = re.sub(r'[\r\n\t]+', ' ', subject).strip()
-                        exclude_kw = ["SUBJECT CODE", "CLASSES ATTENDED", "TOTAL CONDUCTED", "ATTENDANCE %", "S.NO"]
-                        if clean_subject and len(clean_subject) > 1 and not any(kw in clean_subject.upper() for kw in exclude_kw):
-                            attendance_list.append({
-                                "subject": clean_subject,
-                                "attended": attended,
-                                "total": total,
-                                "percentage": percentage or "0.0"
-                            })
-
-            # Clean & Deduplicate Results
-            unique_attendance = []
-            seen = set()
-            for item in attendance_list:
-                if item["subject"] not in seen:
-                    unique_attendance.append(item)
-                    seen.add(item["subject"])
-
-            if unique_attendance:
-                logger.info(f"HTTP Scraper successfully fetched {len(unique_attendance)} subjects for {username}")
-                return unique_attendance
+            # 4. Parse ExtJS Attendance Data
+            records = parse_mits_dashboard_html(res_dash.text)
+            if records:
+                logger.info(f"HTTP Scraper successfully fetched {len(records)} subjects for {username}")
+                return records
 
         except Exception as err:
             logger.warning(f"HTTP Scraper attempt for {base_url} notice: {err}")
@@ -223,7 +234,7 @@ async def _get_attendance_async(username, password):
 
 
 def _sync_scrape_worker(username, password):
-    # 1. Primary Strategy: Ultra-fast HTTP Session Scraper (< 0.5s, 0 Playwright dependency)
+    # 1. Primary Strategy: Ultra-fast HTTP Session Scraper (< 0.3s, 0 Playwright dependency)
     http_result = _get_attendance_http(username, password)
     if http_result is not None:
         return http_result
