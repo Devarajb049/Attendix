@@ -41,13 +41,13 @@ self.addEventListener('activate', (event) => {
 
 // Fetch Event: Network-First with Cache & Offline Fallback Strategy
 self.addEventListener('fetch', (event) => {
-  // Ignore non-GET requests or API POST endpoints
+  // Ignore non-GET requests
   if (event.request.method !== 'GET') return;
 
   const url = new URL(event.request.url);
 
-  // Skip API requests from caching
-  if (url.pathname.startsWith('/api/')) {
+  // Ignore non-http/https schemes (e.g. chrome-extension://) and API routes
+  if (!url.protocol.startsWith('http') || url.pathname.startsWith('/api/')) {
     return;
   }
 
@@ -58,11 +58,12 @@ self.addEventListener('fetch', (event) => {
         if (networkResponse && networkResponse.status === 200 && networkResponse.type === 'basic') {
           const responseToCache = networkResponse.clone();
           caches.open(CACHE_NAME).then((cache) => {
-            cache.put(event.request, responseToCache);
+            cache.put(event.request, responseToCache).catch(() => {});
           });
         }
         return networkResponse;
       })
+
       .catch(() => {
         // Fallback to cache if network fails
         return caches.match(event.request).then((cachedResponse) => {
