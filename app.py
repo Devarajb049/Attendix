@@ -27,6 +27,17 @@ app = FastAPI(
     version="1.0.0"
 )
 
+@app.on_event("startup")
+async def startup_event():
+    try:
+        logger.info("Auto-verifying Playwright Chromium browser installation on startup...")
+        import subprocess
+        subprocess.run([sys.executable, "-m", "playwright", "install", "chromium"], check=False)
+        logger.info("Playwright Chromium browser verification finished.")
+    except Exception as e:
+        logger.warning(f"Playwright auto-install check notice: {e}")
+
+
 # Mount static files directory
 static_dir = os.path.join(os.path.dirname(__file__), "static")
 if not os.path.exists(static_dir):
