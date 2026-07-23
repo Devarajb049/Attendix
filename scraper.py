@@ -49,8 +49,9 @@ def parse_mits_dashboard_html(html_text):
                 total_raw = clean[curr + 3]
                 perc_raw = clean[curr + 4]
 
-                display_name = subject_map.get(code_or_name, code_or_name)
+                display_name = code_or_name.split(" - ")[0].strip()
                 att_val = "0" if attended_raw == "-" else attended_raw
+
                 tot_val = "0" if total_raw == "-" else total_raw
                 perc_val = "0.0" if perc_raw == "-" else perc_raw.replace("%", "").strip()
 

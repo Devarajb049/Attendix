@@ -338,13 +338,14 @@ document.addEventListener('DOMContentLoaded', () => {
                 }
 
                 const isChecked = item.included !== false;
+                const displaySubjectCode = item.subject ? item.subject.split(' - ')[0].trim() : item.subject;
 
                 const cardHtml = `
                     <div class="subject-card glass-card ${isChecked ? '' : 'excluded'}">
                         <div class="subject-header">
                             <div class="subject-card-check">
                                 <input type="checkbox" class="sub-check" data-subject="${escapeHtml(item.subject)}" ${isChecked ? 'checked' : ''} title="Include in overall calculation">
-                                <h4 class="subject-title">${escapeHtml(item.subject)}</h4>
+                                <h4 class="subject-title">${escapeHtml(displaySubjectCode)}</h4>
                             </div>
                             <span class="status-badge ${statusClass}">${badgeText}</span>
                         </div>
@@ -378,18 +379,20 @@ document.addEventListener('DOMContentLoaded', () => {
             }
 
             const isChecked = item.included !== false;
+            const displaySubjectCode = item.subject ? item.subject.split(' - ')[0].trim() : item.subject;
 
             const trHtml = `
                 <tr class="${isChecked ? '' : 'excluded-row'}">
                     <td><input type="checkbox" class="sub-check" data-subject="${escapeHtml(item.subject)}" ${isChecked ? 'checked' : ''} title="Include in overall calculation"></td>
                     <td>${idx + 1}</td>
-                    <td><strong>${escapeHtml(item.subject)}</strong></td>
+                    <td><strong>${escapeHtml(displaySubjectCode)}</strong></td>
                     <td>${item.attended}</td>
                     <td>${item.total}</td>
                     <td><strong>${item.percentage}%</strong></td>
                     <td><span class="status-badge ${statusClass}">${badgeText}</span></td>
                 </tr>
             `;
+
             subjectsTableBody.insertAdjacentHTML('beforeend', trHtml);
         });
 
