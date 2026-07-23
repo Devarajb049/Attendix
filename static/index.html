@@ -1,0 +1,340 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Attendix - Student Attendance Tracker</title>
+    <meta name="description"
+        content="Track and calculate your student attendance, overall percentage, and target bunks with Attendix.">
+    <!-- PWA Configuration Meta Tags -->
+    <link rel="manifest" href="/manifest.json">
+    <meta name="theme-color" content="#0f172a">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="Attendix">
+    <link rel="apple-touch-icon" href="/static/icons/apple-touch-icon.png">
+
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Outfit:wght@400;600;700;800&display=swap"
+        rel="stylesheet">
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- jsPDF & AutoTable CDN for Vector PDF Export -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.31/jspdf.plugin.autotable.min.js"></script>
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+
+<body>
+    <div class="background-glow">
+        <div class="glow-sphere sphere-1"></div>
+        <div class="glow-sphere sphere-2"></div>
+        <div class="glow-sphere sphere-3"></div>
+    </div>
+
+    <!-- PWA Install Popup Modal -->
+    <div class="install-modal-overlay" id="installModal" style="display: none;">
+        <div class="install-modal-card glass-card">
+            <div class="install-header">
+                <div class="install-icon-wrap">
+                    <i class="fa-solid fa-mobile-screen-button"></i>
+                </div>
+                <h3>Install Attendix App</h3>
+                <p>Install Attendix on your device for a faster experience.</p>
+            </div>
+
+            <div class="install-benefits">
+                <div class="benefit-item"><i class="fa-solid fa-circle-check text-success"></i> One tap access from Home
+                    Screen</div>
+                <div class="benefit-item"><i class="fa-solid fa-circle-check text-success"></i> Full screen native
+                    mobile experience</div>
+                <div class="benefit-item"><i class="fa-solid fa-circle-check text-success"></i> Faster loading & works
+                    offline</div>
+            </div>
+
+            <div class="install-actions">
+                <button class="btn btn-primary btn-block" id="installNowBtn">
+                    <i class="fa-solid fa-download"></i> <span>Install Now</span>
+                </button>
+                <button class="btn btn-outline btn-block" id="installLaterBtn">
+                    <span>Maybe Later</span>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <div class="app-container">
+        <!-- Navigation Header -->
+        <header class="navbar">
+            <div class="brand">
+                <div class="brand-logo">
+                    <img src="/static/logo.png" alt="Attendix Logo" class="app-brand-img">
+                </div>
+                <div class="brand-text">
+                    <span class="brand-title">Attendix</span>
+                    <span class="brand-subtitle">Attendance Tracker</span>
+                </div>
+            </div>
+
+
+            <div class="nav-actions" id="navActions" style="display: none;">
+                <button class="btn btn-outline btn-sm pwa-header-btn" id="pwaInstallHeaderBtn" style="display: none;">
+                    <i class="fa-solid fa-download"></i> <span>Install App</span>
+                </button>
+                <span class="user-badge" id="displayUserBadge"><i class="fa-solid fa-user"></i> <span
+                        id="displayUsername">Student</span></span>
+                <button class="btn btn-outline" id="refreshBtn" title="Refresh Attendance">
+                    <i class="fa-solid fa-arrows-rotate"></i> <span>Refresh</span>
+                </button>
+                <button class="btn btn-danger" id="logoutBtn" title="Logout">
+                    <i class="fa-solid fa-right-from-bracket"></i> <span>Logout</span>
+                </button>
+            </div>
+        </header>
+
+        <!-- Login View -->
+        <main class="view-container" id="loginView">
+
+            <div class="login-card glass-card mobile-style-card">
+                <!-- Top Organic Wave Banner -->
+                <div class="organic-header-banner">
+                    <div class="wave-bg"></div>
+                    <div class="welcome-header-content">
+
+                        <div class="welcome-icon-badge">
+                            <img src="/static/logo.png" alt="Attendix Logo" class="welcome-logo-img">
+                        </div>
+                        <div class="welcome-text">
+                            <h2>Track Your Attendance</h2>
+                        </div>
+                    </div>
+                </div>
+
+                <form id="loginForm" class="login-form">
+                    <div class="form-group">
+                        <label for="studentId">Student Register No. / ID</label>
+                        <div class="input-wrapper">
+                            <i class="fa-solid fa-id-card input-icon"></i>
+                            <input type="text" id="studentId" placeholder="e.g. 25695A0514" required
+                                autocomplete="username">
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="password">IMS Password</label>
+                        <div class="input-wrapper">
+                            <i class="fa-solid fa-lock input-icon"></i>
+                            <input type="password" id="password" placeholder="Enter your password" required
+                                autocomplete="current-password">
+                            <button type="button" class="toggle-password" id="togglePasswordBtn"
+                                aria-label="Toggle password visibility">
+                                <i class="fa-solid fa-eye" id="togglePasswordIcon"></i>
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="form-options">
+                        <label class="checkbox-container">
+                            <input type="checkbox" id="rememberMe" checked>
+                            <span class="checkmark"></span>
+                            <span>Remember credentials on this browser</span>
+                        </label>
+                    </div>
+
+                    <div class="alert alert-danger" id="loginAlert" style="display: none;">
+                        <i class="fa-solid fa-triangle-exclamation"></i>
+                        <span id="alertMessage">Login failed.</span>
+                    </div>
+
+                    <button type="submit" class="btn btn-primary btn-block" id="submitLoginBtn">
+                        <span>Check Attendance</span>
+                        <i class="fa-solid fa-arrow-right"></i>
+                    </button>
+                </form>
+
+                <div class="card-footer">
+                    <p><i class="fa-solid fa-circle-info"></i> Your credentials are used directly to authenticate with
+                        the official MITS IMS portal (mitsims.in) and are never stored on any server.</p>
+                </div>
+            </div>
+        </main>
+
+        <!-- Loading Overlay View -->
+        <div class="view-container" id="loadingView" style="display: none;">
+            <div class="loading-card glass-card">
+                <div class="orbit-spinner-wrapper">
+                    <div class="orbit-ring ring-outer"></div>
+                    <div class="orbit-ring ring-inner"></div>
+                    <div class="orbit-core">
+                        <img src="/static/logo.png" alt="Attendix Logo" class="orbit-logo-img">
+                    </div>
+
+                </div>
+
+                <h3 class="loading-title">Fetching Attendance Data</h3>
+                <p id="loadingStatusText" class="loading-status">Connecting to MITS IMS Portal...</p>
+
+                <div class="loading-bar-wrapper">
+                    <div class="loading-bar-fill" id="loadingBarFill" style="width: 15%;"></div>
+                </div>
+                <span class="loading-percent" id="loadingPercentText">15%</span>
+
+                <div class="loading-steps">
+                    <div class="step-item active" id="step1">
+                        <div class="step-icon"><i class="fa-solid fa-network-wired"></i></div>
+                        <span>Connecting to portal</span>
+                    </div>
+                    <div class="step-item" id="step2">
+                        <div class="step-icon"><i class="fa-solid fa-user-lock"></i></div>
+                        <span>Authenticating student credentials</span>
+                    </div>
+                    <div class="step-item" id="step3">
+                        <div class="step-icon"><i class="fa-solid fa-table-list"></i></div>
+                        <span>Scraping subject records</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Dashboard View -->
+        <main class="view-container" id="dashboardView" style="display: none;">
+            <!-- Summary Header Banner -->
+            <section class="summary-section">
+                <div class="kpi-grid">
+                    <!-- Overall Percentage Card -->
+                    <div class="kpi-card glass-card overall-kpi" id="overallKpiCard">
+                        <div class="kpi-header">
+                            <span>Overall Attendance</span>
+                            <span class="status-badge" id="overallBadge">Analyzing...</span>
+                        </div>
+                        <div class="kpi-body">
+                            <div class="percentage-display">
+                                <h1 id="overallPercentage">0.0%</h1>
+                                <p id="overallDetail">0 / 0 Total Classes</p>
+                            </div>
+                            <div class="progress-ring-container">
+                                <svg class="progress-ring" width="100" height="100">
+                                    <circle class="progress-ring-bg" stroke="rgba(255,255,255,0.1)" stroke-width="8"
+                                        fill="transparent" r="40" cx="50" cy="50" />
+                                    <circle class="progress-ring-circle" id="overallRing" stroke="url(#gradientRing)"
+                                        stroke-width="8" stroke-dasharray="251.2" stroke-dashoffset="251.2"
+                                        stroke-linecap="round" fill="transparent" r="40" cx="50" cy="50" />
+                                    <defs>
+                                        <linearGradient id="gradientRing" x1="0%" y1="0%" x2="100%" y2="100%">
+                                            <stop offset="0%" stop-color="#6366f1" />
+                                            <stop offset="50%" stop-color="#06b6d4" />
+                                            <stop offset="100%" stop-color="#10b981" />
+                                        </linearGradient>
+                                    </defs>
+                                </svg>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Bunk / Attendance Advice Card -->
+                    <div class="kpi-card glass-card advice-kpi" id="adviceKpiCard">
+                        <div class="kpi-header">
+                            <span>Bunk Advice & Target</span>
+                            <div class="target-selector">
+                                <button class="target-btn active" data-target="75">75%</button>
+                                <button class="target-btn" data-target="80">80%</button>
+                                <button class="target-btn" data-target="85">85%</button>
+                            </div>
+                        </div>
+                        <div class="kpi-body advice-body">
+                            <div class="advice-icon-wrap" id="adviceIconWrap">
+                                <i class="fa-solid fa-shield-check" id="adviceIcon"></i>
+                            </div>
+                            <div class="advice-content">
+                                <h3 id="adviceTitle">Safe Zone</h3>
+                                <p id="adviceText">Evaluating bunk status...</p>
+                            </div>
+                        </div>
+                    </div>
+
+
+                    <!-- Total Classes Card -->
+                    <div class="kpi-card glass-card count-kpi">
+                        <div class="kpi-header">
+                            <span>Classes Breakdown</span>
+                            <i class="fa-solid fa-book-bookmark kpi-icon"></i>
+                        </div>
+                        <div class="kpi-body count-body">
+                            <div class="count-box">
+                                <span class="count-num" id="totalAttendedCount">0</span>
+                                <span class="count-label"><i class="fa-solid fa-circle-check text-success"></i>
+                                    Attended</span>
+                            </div>
+                            <div class="count-divider"></div>
+                            <div class="count-box">
+                                <span class="count-num" id="totalConductedCount">0</span>
+                                <span class="count-label"><i class="fa-solid fa-calendar-days"></i> Conducted</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Subject List Controls -->
+            <section class="controls-section">
+                <div class="search-box">
+                    <i class="fa-solid fa-magnifying-glass search-icon"></i>
+                    <input type="text" id="searchInput" placeholder="Search subject code or name...">
+                </div>
+
+                <div class="control-actions">
+                    <button class="btn btn-outline btn-sm" id="selectAllBtn" title="Toggle Select All / Deselect All">
+                        <i class="fa-solid fa-square-check"></i> <span id="selectAllBtnText">Deselect All</span>
+                    </button>
+
+
+                    <div class="view-toggle">
+                        <button class="toggle-btn active" id="viewGridBtn" title="Grid View">
+                            <i class="fa-solid fa-border-all"></i>
+                        </button>
+                        <button class="toggle-btn" id="viewTableBtn" title="Table View">
+                            <i class="fa-solid fa-list"></i>
+                        </button>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Subject Cards Container (Grid View) -->
+            <section class="subjects-grid" id="subjectsGrid"></section>
+
+            <!-- Subject Table Container (Table View) -->
+            <section class="subjects-table-wrapper glass-card" id="subjectsTableWrapper" style="display: none;">
+                <table class="subjects-table">
+                    <thead>
+                        <tr>
+                            <th><input type="checkbox" id="masterTableCheckbox" checked
+                                    title="Select/Deselect All Subjects"></th>
+                            <th>#</th>
+                            <th>Subject Name</th>
+                            <th>Attended</th>
+                            <th>Total Conducted</th>
+                            <th>Percentage</th>
+                            <th>Status</th>
+                        </tr>
+                    </thead>
+                    <tbody id="subjectsTableBody"></tbody>
+                </table>
+            </section>
+
+        </main>
+    </div>
+
+    <!-- Toast Notification Container -->
+    <div class="toast-container" id="toastContainer"></div>
+
+    <!-- Custom JS -->
+    <script src="/static/app.js"></script>
+</body>
+
+</html>
