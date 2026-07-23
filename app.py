@@ -48,6 +48,23 @@ async def serve_index():
     return JSONResponse({"message": "MITS IMS Attendance Web API is running!"})
 
 
+@app.get("/favicon.ico", include_in_schema=False)
+async def favicon():
+    fav_path = os.path.join(static_dir, "favicon.ico")
+    if os.path.exists(fav_path):
+        return FileResponse(fav_path)
+    return FileResponse(os.path.join(static_dir, "logo.png"))
+
+
+@app.get("/manifest.json", include_in_schema=False)
+async def manifest():
+    manifest_path = os.path.join(static_dir, "manifest.json")
+    if os.path.exists(manifest_path):
+        return FileResponse(manifest_path)
+    return JSONResponse({"error": "manifest not found"}, status_code=404)
+
+
+
 @app.get("/manifest.json", response_class=FileResponse)
 async def serve_manifest():
     manifest_path = os.path.join(static_dir, "manifest.json")

@@ -490,9 +490,12 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     // Print / Export PDF Handler
-    exportPdfBtn.addEventListener('click', () => {
-        window.print();
-    });
+    if (typeof exportPdfBtn !== 'undefined' && exportPdfBtn) {
+        exportPdfBtn.addEventListener('click', () => {
+            window.print();
+        });
+    }
+
 
     // View State Switchers
     function showLoginState() {
