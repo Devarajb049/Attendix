@@ -8,6 +8,7 @@ if sys.platform == "win32":
     asyncio.set_event_loop_policy(asyncio.WindowsProactorEventLoopPolicy())
 
 from fastapi import FastAPI, HTTPException
+from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import FileResponse, JSONResponse
 from typing import Optional, List
@@ -28,6 +29,14 @@ app = FastAPI(
     title="MITS IMS Attendance Web API",
     description="Web service to scrape and view MITS IMS student attendance",
     version="1.0.0"
+)
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["Content-Type", "Authorization", "Accept", "Origin", "X-Requested-With"],
 )
 
 @app.on_event("startup")
@@ -73,13 +82,6 @@ async def favicon():
         return FileResponse(fav_path)
     return FileResponse(os.path.join(static_dir, "logo.png"))
 
-
-@app.get("/manifest.json", include_in_schema=False)
-async def manifest():
-    manifest_path = os.path.join(static_dir, "manifest.json")
-    if os.path.exists(manifest_path):
-        return FileResponse(manifest_path)
-    return JSONResponse({"error": "manifest not found"}, status_code=404)
 
 
 
