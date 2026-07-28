@@ -1,0 +1,10 @@
+{
+  "name": "mits-ims-static",
+  "version": "1.0.0",
+  "description": "Attendix Static Web Client",
+  "scripts": {
+    "start": "python ../app.py",
+    "dev": "python ../app.py"
+  },
+  "license": "ISC"
+}

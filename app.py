@@ -10,8 +10,11 @@ if sys.platform == "win32":
 from fastapi import FastAPI, HTTPException
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import FileResponse, JSONResponse
+from typing import Optional, List
+from datetime import datetime
 from pydantic import BaseModel, Field
 from scraper import get_attendance
+from report_generator import generate_pdf_report, generate_txt_report
 
 # Set up logging
 logging.basicConfig(
@@ -50,6 +53,9 @@ app.mount("/static", StaticFiles(directory=static_dir), name="static")
 class AttendanceRequest(BaseModel):
     username: str = Field(..., description="MITS IMS Student ID / Register Number")
     password: str = Field(..., description="MITS IMS Password")
+
+
+
 
 
 @app.get("/", response_class=FileResponse)
@@ -122,9 +128,16 @@ async def fetch_attendance(req: AttendanceRequest):
             err_msg = str(result["error"]).strip()
             logger.warning(f"Scraping error for {username}: {err_msg}")
             return JSONResponse(status_code=400, content={"success": False, "error": err_msg})
-        
-        logger.info(f"Successfully fetched attendance for {username} with {len(result)} subjects.")
-        return {"success": True, "data": result}
+
+        if isinstance(result, dict) and "records" in result:
+            data = result["records"]
+            student_name = result.get("student_name")
+        else:
+            data = result
+            student_name = None
+
+        logger.info(f"Successfully fetched attendance for {username} with {len(data)} subjects (Student Name: {student_name}).")
+        return {"success": True, "student_name": student_name, "data": data}
         
     except Exception as e:
         import traceback
@@ -134,6 +147,10 @@ async def fetch_attendance(req: AttendanceRequest):
         if not err_detail:
             err_detail = f"{type(e).__name__} occurred"
         return JSONResponse(status_code=500, content={"success": False, "error": f"Server error: {err_detail}"})
+
+
+
+
 
 
 

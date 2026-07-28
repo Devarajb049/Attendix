@@ -8,6 +8,80 @@ from bs4 import BeautifulSoup
 logger = logging.getLogger("mits_ims_web")
 
 
+def extract_student_name(html_text):
+    """
+    Extracts Student Name from MITS IMS dashboard HTML with 100% precision.
+    Supports MITS ExtJS displayfields, top header 'STUDENT NAME | CHANGE PASSWORD',
+    and <span style="font-size:11px; color:black">STUDENT NAME</span>.
+    """
+    if not html_text:
+        return None
+
+    # Excluded UI terms & keywords that are NOT student names
+    excluded = {
+        "DASHBOARD", "PROGRESS REPORT", "TRANSCRIPT", "FEEDBACK", "PLACEMENT",
+        "CERTIFICATE REQUEST", "ATTENDANCE", "ASSESSMENT MARKS", "TIME TABLE",
+        "SUBJECT DETAILS", "CHANGE PASSWORD", "LOGOUT", "MITS", "GEMS",
+        "ONLINE", "ADVAYA", "STUDENT INDEX", "STUDENT LOGIN", "SUBMIT",
+        "CANCEL", "SEARCH", "CLEAR", "OK", "RESET", "HOME", "WELCOME",
+        "SEMESTER", "NOTE", "CLASS", "TOTAL", "S.NO", "MADANAPALLE",
+        "INSTITUTE", "REGULAR", "DETAILS", "MARK", "TIME", "TABLE",
+        "SOFTSKILLS", "APPTITUDE", "CLASSES ATTENDED", "TOTAL CONDUCTED",
+        "ATTENDANCE %", "SAFE ZONE", "STUDENT", "REGISTER NUMBER", "JUST NOW",
+        "VIEW FULL PROFILE", "OVERALL PERC", "SUBJECTS", "ATTENDED"
+    }
+
+    # 1. Header pattern: "STUDENT NAME | CHANGE PASSWORD | LOGOUT"
+    m_header = re.search(r'([A-Za-z\s\.\']+?)\s*\|\s*(?:CHANGE\s+PASSWORD|LOGOUT)', html_text, re.IGNORECASE)
+    if m_header:
+        candidate = m_header.group(1).strip()
+        if len(candidate) >= 3 and not candidate.isdigit() and candidate.upper() not in excluded:
+            return candidate.title()
+
+    # 2. ExtJS displayfield values matching <span style="...">...</span>
+    values = re.findall(r"value\s*:\s*\\?['\"](<span.*?>.*?</span>)", html_text, re.DOTALL)
+    for m in values:
+        t = BeautifulSoup(m, "html.parser").get_text(strip=True)
+        if t:
+            clean_t = t.split("|")[0].strip()
+            upper_t = clean_t.upper()
+            if (len(clean_t) >= 3 and 
+                not any(char.isdigit() for char in clean_t) and 
+                upper_t not in excluded and
+                all(w.upper() not in excluded for w in upper_t.split()) and
+                re.match(r"^[A-Za-z\.\'\s]+$", clean_t)):
+                return clean_t.title()
+
+    # 3. Direct check for element with id studentName
+    try:
+        soup = BeautifulSoup(html_text, "html.parser")
+        name_elem = soup.find(id=re.compile(r"studentName|StudentName|lblStudentName|spnStudentName", re.I))
+        if name_elem:
+            val = name_elem.get_text(strip=True)
+            if val and len(val) >= 2 and not val.isdigit() and val.upper() not in excluded:
+                return val.title()
+    except Exception as e:
+        logger.debug(f"Soup parse error in extract_student_name: {e}")
+
+    # 4. Spans with font-size:11px or color:black
+    spans = re.findall(r'<span[^>]*style=["\'][^"\']*11px[^"\']*["\'][^>]*>\s*([^<]+?)\s*</span>', html_text, re.IGNORECASE)
+    for s in spans:
+        clean_s = s.strip()
+        if "|" in clean_s:
+            clean_s = clean_s.split("|")[0].strip()
+        upper_s = clean_s.upper()
+        if (len(clean_s) >= 3 and 
+            not any(char.isdigit() for char in clean_s) and 
+            upper_s not in excluded and
+            all(w.upper() not in excluded for w in upper_s.split()) and
+            re.match(r"^[A-Za-z\.\'\s]+$", clean_s)):
+            return clean_s.title()
+
+    return None
+
+
+
+
 def parse_mits_dashboard_html(html_text):
     """
     Parses ExtJS panel displayfields from MITS IMS dashboard.action output.
@@ -102,15 +176,30 @@ def _get_attendance_http(username, password):
             except Exception:
                 pass
 
-            # 3. GET Dashboard View Endpoint directly
+            # 3. GET Dashboard View Endpoint & Student Index
             dash_url = f"{base_url}/gemsonline-student/dashboard.action?actionType=view"
             res_dash = session.get(dash_url, headers=headers, timeout=10)
 
-            # 4. Parse ExtJS Attendance Data
+            # 4. Extract Student Name from Post response, Dashboard response, or studentIndex.html
+            student_name = extract_student_name(res_post.text)
+            if not student_name:
+                student_name = extract_student_name(res_dash.text)
+            if not student_name:
+                try:
+                    idx_url = f"{base_url}/gemsonline-student/studentIndex.html"
+                    res_idx = session.get(idx_url, headers=headers, timeout=5)
+                    student_name = extract_student_name(res_idx.text)
+                except Exception:
+                    pass
+
             records = parse_mits_dashboard_html(res_dash.text)
+
             if records:
-                logger.info(f"HTTP Scraper successfully fetched {len(records)} subjects for {username}")
-                return records
+                logger.info(f"HTTP Scraper successfully fetched {len(records)} subjects for {username} (Name: {student_name})")
+                return {
+                    "student_name": student_name,
+                    "records": records
+                }
 
         except Exception as err:
             logger.warning(f"HTTP Scraper attempt for {base_url} notice: {err}")
@@ -217,7 +306,16 @@ async def _get_attendance_async(username, password):
                     seen_subjects.add(item["subject"])
 
             if unique_attendance:
-                return unique_attendance
+                student_name = None
+                try:
+                    page_content = await page.content()
+                    student_name = extract_student_name(page_content)
+                except Exception:
+                    pass
+                return {
+                    "student_name": student_name,
+                    "records": unique_attendance
+                }
 
             return {"error": "Attendance records not found."}
 

@@ -1,0 +1,7 @@
+__pycache__/
+*.pyc
+.env
+users.json
+email_logs.json
+node_modules/
+.DS_Store

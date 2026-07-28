@@ -1,0 +1,19 @@
+{
+  "name": "mits-ims-attendance-web",
+  "version": "1.0.0",
+  "description": "Attendix - MITS IMS Attendance Web Application",
+  "main": "app.py",
+  "scripts": {
+    "start": "python app.py",
+    "dev": "python app.py",
+    "serve": "uvicorn app:app --reload --port 8080"
+  },
+  "keywords": [
+    "mits",
+    "ims",
+    "attendance",
+    "fastapi"
+  ],
+  "author": "",
+  "license": "ISC"
+}

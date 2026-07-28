@@ -5,7 +5,8 @@ document.addEventListener('DOMContentLoaded', () => {
     const loadingView = document.getElementById('loadingView');
     const dashboardView = document.getElementById('dashboardView');
     const navActions = document.getElementById('navActions');
-
+    const navTabs = document.getElementById('navTabs');
+    const mobileBottomNav = document.getElementById('mobileBottomNav');
 
     const loginForm = document.getElementById('loginForm');
     const studentIdInput = document.getElementById('studentId');
@@ -40,6 +41,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const totalConductedCount = document.getElementById('totalConductedCount');
 
     const searchInput = document.getElementById('searchInput');
+    const sortSelect = document.getElementById('sortSelect');
     const viewGridBtn = document.getElementById('viewGridBtn');
     const viewTableBtn = document.getElementById('viewTableBtn');
     const subjectsGrid = document.getElementById('subjectsGrid');
@@ -47,12 +49,56 @@ document.addEventListener('DOMContentLoaded', () => {
     const subjectsTableBody = document.getElementById('subjectsTableBody');
     const exportPdfBtn = document.getElementById('exportPdfBtn');
 
+    // Theme Switcher Elements
+    const themeToggleBtn = document.getElementById('themeToggleBtn');
+    const themeToggleIcon = document.getElementById('themeToggleIcon');
+
     // State Variables
     let currentAttendanceData = [];
     let currentViewMode = 'grid'; // 'grid' or 'table'
     let selectedTargetPerc = 75; // Default target percentage
+    let barChartInstance = null;
+    let doughnutChartInstance = null;
+    let currentStudentName = localStorage.getItem('mits_student_name') || '';
+    let currentRegisterNumber = localStorage.getItem('mits_stu_id') ? localStorage.getItem('mits_stu_id').toUpperCase() : '';
+    let currentLastLogin = localStorage.getItem('mits_last_login') || '';
 
-    // Target Percentage Selector Handler (75%, 80%, 85%)
+
+    // -------------------------------------------------------------
+    // 🎨 THEME ENGINE (DARK / LIGHT MODE WITH LOCALSTORAGE MEMORY)
+    // -------------------------------------------------------------
+    initTheme();
+
+    function initTheme() {
+        const savedTheme = localStorage.getItem('attendix_theme');
+        if (savedTheme) {
+            setTheme(savedTheme);
+        } else {
+            const prefersDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+            setTheme(prefersDark ? 'dark' : 'light');
+        }
+    }
+
+    function setTheme(theme) {
+        document.documentElement.setAttribute('data-theme', theme);
+        localStorage.setItem('attendix_theme', theme);
+        if (themeToggleIcon) {
+            themeToggleIcon.className = theme === 'dark' ? 'fa-solid fa-sun' : 'fa-solid fa-moon';
+        }
+        if (barChartInstance || doughnutChartInstance) {
+            renderCharts(currentAttendanceData);
+        }
+    }
+
+    if (themeToggleBtn) {
+        themeToggleBtn.addEventListener('click', () => {
+            const currentTheme = document.documentElement.getAttribute('data-theme') || 'dark';
+            const nextTheme = currentTheme === 'dark' ? 'light' : 'dark';
+            setTheme(nextTheme);
+        });
+    }
+
+    // Target Percentage Selector Handler (75%, 80%, 85%, 90%)
     document.querySelectorAll('.target-btn').forEach(btn => {
         btn.addEventListener('click', (e) => {
             document.querySelectorAll('.target-btn').forEach(b => b.classList.remove('active'));
@@ -76,7 +122,8 @@ document.addEventListener('DOMContentLoaded', () => {
             studentIdInput.value = savedId;
             passwordInput.value = savedPass;
             rememberMeCheckbox.checked = true;
-            displayUsername.textContent = savedId;
+            displayUsername.textContent = currentStudentName || savedId.toUpperCase();
+
 
             // Load cached data instantly if available to stay on Dashboard
             if (cachedData) {
@@ -99,7 +146,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    // Toggle Password Visibility (with e.preventDefault to prevent HTML5 form validation trigger)
+    // Toggle Password Visibility
     if (togglePasswordBtn && passwordInput) {
         togglePasswordBtn.addEventListener('click', (e) => {
             e.preventDefault();
@@ -111,7 +158,6 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         });
     }
-
 
     // Form Submit Handler
     loginForm.addEventListener('submit', async (e) => {
@@ -136,7 +182,7 @@ document.addEventListener('DOMContentLoaded', () => {
         fetchAttendance(username, password, false);
     });
 
-    // Fetch Attendance Function (with silent background refresh parameter)
+    // Fetch Attendance Function
     async function fetchAttendance(username, password, silent = false) {
         if (!silent) {
             hideAlert();
@@ -174,11 +220,18 @@ document.addEventListener('DOMContentLoaded', () => {
                     ...item,
                     included: true
                 }));
+                currentRegisterNumber = username.toUpperCase();
+                currentStudentName = (result.student_name && result.student_name.trim()) ? result.student_name.trim() : '';
+                currentLastLogin = new Date().toLocaleString('en-US', { dateStyle: 'medium', timeStyle: 'short' });
+
+
                 // Cache data in localStorage for persistent session
                 if (rememberMeCheckbox.checked || localStorage.getItem('mits_stu_id')) {
                     localStorage.setItem('mits_attendance_cache', JSON.stringify(currentAttendanceData));
+                    localStorage.setItem('mits_student_name', currentStudentName);
+                    localStorage.setItem('mits_last_login', currentLastLogin);
                 }
-                displayUsername.textContent = username;
+                displayUsername.textContent = currentStudentName || currentRegisterNumber;
                 renderDashboard(currentAttendanceData);
                 showDashboardState();
             } else {
@@ -229,13 +282,15 @@ document.addEventListener('DOMContentLoaded', () => {
             calculateBunkAdvice(0, 0, 0);
             renderSubjectViews(attendanceList);
             updateSelectAllState(attendanceList);
+            renderCharts(attendanceList);
             return;
         }
 
-        overallPercentage.textContent = `${overallPerc}%`;
+        // Animated Number Counting Effect
+        animateValue(overallPercentage, 0, parseFloat(overallPerc), 800, '%');
         overallDetail.textContent = `Based on ${includedCount} courses`;
-        totalAttendedCount.textContent = totalAttended;
-        totalConductedCount.textContent = totalConducted;
+        animateValue(totalAttendedCount, 0, totalAttended, 600);
+        animateValue(totalConductedCount, 0, totalConducted, 600);
 
         // 2. Set Overall Badge & Progress Ring
         const percVal = parseFloat(overallPerc);
@@ -255,23 +310,85 @@ document.addEventListener('DOMContentLoaded', () => {
         // 3. Bunk / Target Attendance Advice Calculator
         calculateBunkAdvice(totalAttended, totalConducted, percVal);
 
+        // 4. Update Student Profile Banner & Modal Metrics
+        const profileBannerName = document.getElementById('profileBannerName');
+        const profileBannerRoll = document.getElementById('profileBannerRoll');
+        const profileBannerLastLogin = document.getElementById('profileBannerLastLogin');
 
-        // 4. Render Subject Views
+        const modalStudentName = document.getElementById('modalStudentName');
+        const modalRollNo = document.getElementById('modalRollNo');
+        const modalLastLogin = document.getElementById('modalLastLogin');
+
+        const modalOverallPerc = document.getElementById('modalOverallPerc');
+        const modalTotalCourses = document.getElementById('modalTotalCourses');
+        const modalAttendedClasses = document.getElementById('modalAttendedClasses');
+        const modalStatusBadge = document.getElementById('modalStatusBadge');
+
+        const activeRegNo = currentRegisterNumber || (displayUsername ? displayUsername.textContent.trim() : 'Student');
+        const activeName = currentStudentName || activeRegNo;
+        const activeLogin = currentLastLogin || 'Just now';
+
+        if (profileBannerName) profileBannerName.textContent = activeName;
+        if (profileBannerRoll) profileBannerRoll.textContent = activeRegNo;
+        if (profileBannerLastLogin) profileBannerLastLogin.textContent = activeLogin;
+
+        if (modalStudentName) modalStudentName.textContent = activeName;
+        if (modalRollNo) modalRollNo.textContent = activeRegNo;
+        if (modalLastLogin) modalLastLogin.textContent = activeLogin;
+
+        if (modalOverallPerc) modalOverallPerc.textContent = `${overallPerc}%`;
+        if (modalTotalCourses) modalTotalCourses.textContent = includedCount;
+        if (modalAttendedClasses) modalAttendedClasses.textContent = `${totalAttended} / ${totalConducted}`;
+        if (modalStatusBadge) {
+            modalStatusBadge.textContent = overallBadge.textContent;
+            modalStatusBadge.className = overallBadge.className;
+        }
+
+
+        // 5. Render Subject Views
         renderSubjectViews(attendanceList);
 
-        // 5. Update Master Checkbox States
+        // 6. Render Interactive Charts
+        renderCharts(attendanceList);
+
+        // 7. Update Master Checkbox States
         updateSelectAllState(attendanceList);
+    }
+
+    // Smooth Number Counter Animation
+    function animateValue(element, start, end, duration, suffix = '') {
+        if (!element) return;
+        const startTime = performance.now();
+
+        function updateNumber(currentTime) {
+            const elapsed = currentTime - startTime;
+            const progress = Math.min(elapsed / duration, 1);
+            // Ease out cubic
+            const easedProgress = 1 - Math.pow(1 - progress, 3);
+            const currentValue = (start + (end - start) * easedProgress).toFixed(suffix ? 1 : 0);
+
+            element.textContent = `${currentValue}${suffix}`;
+
+            if (progress < 1) {
+                requestAnimationFrame(updateNumber);
+            } else {
+                element.textContent = `${end.toFixed(suffix ? 1 : 0)}${suffix}`;
+            }
+        }
+
+        requestAnimationFrame(updateNumber);
     }
 
     // Set SVG Circular Progress Ring
     function setOverallRingProgress(percent) {
-        const radius = overallRing.r.baseVal.value;
-        const circumference = 2 * Math.PI * radius; // ~251.2
+        if (!overallRing) return;
+        const radius = overallRing.r.baseVal.value; // ~44
+        const circumference = 2 * Math.PI * radius; // ~276.4
         const offset = circumference - (percent / 100) * circumference;
         overallRing.style.strokeDashoffset = Math.max(0, offset);
     }
 
-    // Dynamic Bunk / Attendance Advice Calculator Logic (for selectedTargetPerc)
+    // Dynamic Bunk / Attendance Advice Calculator Logic
     function calculateBunkAdvice(attended, total, overallPerc) {
         if (total === 0) {
             adviceTitle.textContent = 'No Data';
@@ -281,7 +398,7 @@ document.addEventListener('DOMContentLoaded', () => {
             return;
         }
 
-        const targetRatio = selectedTargetPerc / 100; // Dynamic target threshold (75%, 80%, 85%)
+        const targetRatio = selectedTargetPerc / 100;
 
         if (overallPerc >= selectedTargetPerc) {
             const canBunk = Math.floor((attended - targetRatio * total) / targetRatio);
@@ -303,23 +420,33 @@ document.addEventListener('DOMContentLoaded', () => {
             adviceIconWrap.className = 'advice-icon-wrap alert';
             adviceIcon.className = 'fa-solid fa-triangle-exclamation';
         }
-
     }
 
-
-    // Render Subject Cards & Table with Checkboxes
+    // Render Subject Cards & Table with Checkboxes & Sorting
     function renderSubjectViews(data) {
         const query = searchInput.value.toLowerCase().trim();
-        const filtered = data.filter(item =>
+        let filtered = data.filter(item =>
             item.subject.toLowerCase().includes(query)
         );
+
+        // Sorting Logic
+        const sortVal = sortSelect ? sortSelect.value : 'default';
+        if (sortVal === 'perc-desc') {
+            filtered.sort((a, b) => (parseFloat(b.percentage) || 0) - (parseFloat(a.percentage) || 0));
+        } else if (sortVal === 'perc-asc') {
+            filtered.sort((a, b) => (parseFloat(a.percentage) || 0) - (parseFloat(b.percentage) || 0));
+        } else if (sortVal === 'total-desc') {
+            filtered.sort((a, b) => (parseInt(b.total, 10) || 0) - (parseInt(a.total, 10) || 0));
+        } else if (sortVal === 'name-asc') {
+            filtered.sort((a, b) => a.subject.localeCompare(b.subject));
+        }
 
         // Grid View HTML
         subjectsGrid.innerHTML = '';
         if (filtered.length === 0) {
             subjectsGrid.innerHTML = `
                 <div class="glass-card" style="grid-column: 1 / -1; padding: 40px; text-align: center; color: var(--text-secondary);">
-                    <i class="fa-solid fa-folder-open" style="font-size: 32px; margin-bottom: 12px; display: block;"></i>
+                    <i class="fa-solid fa-folder-open" style="font-size: 36px; margin-bottom: 12px; display: block; color: var(--text-muted);"></i>
                     No subject records found matching "${query}".
                 </div>
             `;
@@ -327,36 +454,43 @@ document.addEventListener('DOMContentLoaded', () => {
             filtered.forEach(item => {
                 const perc = parseFloat(item.percentage) || 0;
                 let statusClass = 'success';
-                let badgeText = 'Good';
+                let badgeText = 'Safe (85%+)';
 
-                if (perc < 65) {
+                if (perc < 60) {
                     statusClass = 'danger';
-                    badgeText = 'Low';
-                } else if (perc < 75) {
+                    badgeText = 'Critical (<60%)';
+                } else if (perc < 70) {
+                    statusClass = 'orange';
+                    badgeText = 'Warning (60-69%)';
+                } else if (perc < 85) {
                     statusClass = 'warning';
-                    badgeText = 'Borderline';
+                    badgeText = 'Good (70-84%)';
                 }
 
                 const isChecked = item.included !== false;
                 const displaySubjectCode = item.subject ? item.subject.split(' - ')[0].trim() : item.subject;
+                const fullSubjectName = item.subject && item.subject.includes(' - ') ? item.subject.split(' - ').slice(1).join(' - ').trim() : '';
 
                 const cardHtml = `
-                    <div class="subject-card glass-card ${isChecked ? '' : 'excluded'}">
+                    <div class="subject-card glass-card ${isChecked ? '' : 'excluded'} animate-fade-in">
                         <div class="subject-header">
                             <div class="subject-card-check">
                                 <input type="checkbox" class="sub-check" data-subject="${escapeHtml(item.subject)}" ${isChecked ? 'checked' : ''} title="Include in overall calculation">
-                                <h4 class="subject-title">${escapeHtml(displaySubjectCode)}</h4>
+                                <div>
+                                    <h4 class="subject-title">${escapeHtml(displaySubjectCode)}</h4>
+                                    ${fullSubjectName ? `<span class="subject-sub-name">${escapeHtml(fullSubjectName)}</span>` : ''}
+                                </div>
                             </div>
                             <span class="status-badge ${statusClass}">${badgeText}</span>
                         </div>
                         <div class="subject-stats">
-                            <span class="subject-perc">${item.percentage}%</span>
-                            <span class="subject-counts">${item.attended} / ${item.total} Attended</span>
+                            <span class="subject-perc ${statusClass}">${item.percentage}%</span>
+                            <span class="subject-counts"><i class="fa-solid fa-check-double text-success"></i> ${item.attended} / ${item.total} Attended</span>
                         </div>
                         <div class="progress-bar-bg">
                             <div class="progress-bar-fill ${statusClass}" style="width: ${Math.min(100, Math.max(0, perc))}%;"></div>
                         </div>
-                        ${!isChecked ? '<div class="excluded-tag" style="margin-top: 8px;"><i class="fa-solid fa-eye-slash"></i> Excluded from calculation</div>' : ''}
+                        ${!isChecked ? '<div class="excluded-tag"><i class="fa-solid fa-eye-slash"></i> Excluded from overall aggregate</div>' : ''}
                     </div>
                 `;
                 subjectsGrid.insertAdjacentHTML('beforeend', cardHtml);
@@ -368,27 +502,29 @@ document.addEventListener('DOMContentLoaded', () => {
         filtered.forEach((item, idx) => {
             const perc = parseFloat(item.percentage) || 0;
             let statusClass = 'success';
-            let badgeText = 'Good';
+            let badgeText = 'Safe Zone';
 
-            if (perc < 65) {
+            if (perc < 60) {
                 statusClass = 'danger';
-                badgeText = 'Low';
-            } else if (perc < 75) {
+                badgeText = 'Critical';
+            } else if (perc < 70) {
+                statusClass = 'orange';
+                badgeText = 'Warning';
+            } else if (perc < 85) {
                 statusClass = 'warning';
-                badgeText = 'Borderline';
+                badgeText = 'Satisfactory';
             }
 
             const isChecked = item.included !== false;
-            const displaySubjectCode = item.subject ? item.subject.split(' - ')[0].trim() : item.subject;
 
             const trHtml = `
                 <tr class="${isChecked ? '' : 'excluded-row'}">
                     <td><input type="checkbox" class="sub-check" data-subject="${escapeHtml(item.subject)}" ${isChecked ? 'checked' : ''} title="Include in overall calculation"></td>
                     <td>${idx + 1}</td>
-                    <td><strong>${escapeHtml(displaySubjectCode)}</strong></td>
-                    <td>${item.attended}</td>
-                    <td>${item.total}</td>
-                    <td><strong>${item.percentage}%</strong></td>
+                    <td><strong class="table-subject-name">${escapeHtml(item.subject)}</strong></td>
+                    <td><span class="badge-count count-attended">${item.attended}</span></td>
+                    <td><span class="badge-count count-total">${item.total}</span></td>
+                    <td><strong class="table-perc ${statusClass}">${item.percentage}%</strong></td>
                     <td><span class="status-badge ${statusClass}">${badgeText}</span></td>
                 </tr>
             `;
@@ -407,6 +543,136 @@ document.addEventListener('DOMContentLoaded', () => {
                 }
             });
         });
+    }
+
+    // -------------------------------------------------------------
+    // 📊 CHART.JS INTEGRATION (BAR & DOUGHNUT VISUALIZATIONS)
+    // -------------------------------------------------------------
+    function renderCharts(data) {
+        if (!data || data.length === 0) return;
+
+        const isDark = (document.documentElement.getAttribute('data-theme') || 'dark') === 'dark';
+        const textColor = isDark ? '#94a3b8' : '#475569';
+        const gridColor = isDark ? 'rgba(255, 255, 255, 0.06)' : 'rgba(0, 0, 0, 0.06)';
+
+        // Included items only
+        const activeData = data.filter(d => d.included !== false);
+        if (activeData.length === 0) return;
+
+        // 1. Subject Bar Chart
+        const barCanvas = document.getElementById('subjectBarChart');
+        if (barCanvas) {
+            const labels = activeData.map(d => d.subject.split(' - ')[0].trim());
+            const percentages = activeData.map(d => parseFloat(d.percentage) || 0);
+
+            const backgroundColors = percentages.map(p => {
+                if (p < 60) return '#ef4444';
+                if (p < 70) return '#f59e0b';
+                if (p < 85) return '#3b82f6';
+                return '#10b981';
+            });
+
+            if (barChartInstance) {
+                barChartInstance.destroy();
+            }
+
+            barChartInstance = new Chart(barCanvas, {
+                type: 'bar',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: 'Attendance %',
+                        data: percentages,
+                        backgroundColor: backgroundColors,
+                        borderRadius: 8,
+                        borderSkipped: false,
+                        maxBarThickness: 40
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { display: false },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    return ` Attendance: ${context.parsed.y}%`;
+                                }
+                            }
+                        }
+                    },
+                    scales: {
+                        x: {
+                            ticks: { color: textColor, font: { family: 'Inter', size: 11 } },
+                            grid: { display: false }
+                        },
+                        y: {
+                            min: 0,
+                            max: 100,
+                            ticks: {
+                                color: textColor,
+                                font: { family: 'Inter', size: 11 },
+                                callback: value => `${value}%`
+                            },
+                            grid: { color: gridColor }
+                        }
+                    }
+                }
+            });
+        }
+
+        // 2. Risk Distribution Doughnut Chart
+        const doughnutCanvas = document.getElementById('riskDoughnutChart');
+        if (doughnutCanvas) {
+            let safeCount = 0;
+            let blueCount = 0;
+            let warningCount = 0;
+            let criticalCount = 0;
+
+            activeData.forEach(d => {
+                const p = parseFloat(d.percentage) || 0;
+                if (p >= 85) safeCount++;
+                else if (p >= 70) blueCount++;
+                else if (p >= 60) warningCount++;
+                else criticalCount++;
+            });
+
+            if (doughnutChartInstance) {
+                doughnutChartInstance.destroy();
+            }
+
+            doughnutChartInstance = new Chart(doughnutCanvas, {
+                type: 'doughnut',
+                data: {
+                    labels: ['Safe (85%+)', 'Good (70-84%)', 'Warning (60-69%)', 'Critical (<60%)'],
+                    datasets: [{
+                        data: [safeCount, blueCount, warningCount, criticalCount],
+                        backgroundColor: ['#10b981', '#3b82f6', '#f59e0b', '#ef4444'],
+                        borderWidth: 3,
+                        borderColor: isDark ? '#111827' : '#ffffff',
+                        hoverOffset: 6
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: 'bottom',
+                            labels: {
+                                color: textColor,
+                                font: { family: 'Inter', size: 11 },
+                                padding: 14,
+                                usePointStyle: true,
+                                pointStyle: 'circle'
+                            }
+                        }
+                    },
+                    cutout: '70%'
+                }
+            });
+        }
     }
 
     // Helper to sync Select All button & Master Table Checkbox
@@ -449,48 +715,349 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
+    // Search & Sort Listeners
+    if (searchInput) {
+        searchInput.addEventListener('input', () => {
+            renderSubjectViews(currentAttendanceData);
+        });
+    }
 
-    // Search Input Listener
-    searchInput.addEventListener('input', () => {
-        renderSubjectViews(currentAttendanceData);
-    });
+    if (sortSelect) {
+        sortSelect.addEventListener('change', () => {
+            renderSubjectViews(currentAttendanceData);
+        });
+    }
 
     // View Toggle Handlers
-    viewGridBtn.addEventListener('click', () => {
-        currentViewMode = 'grid';
-        viewGridBtn.classList.add('active');
-        viewTableBtn.classList.remove('active');
-        subjectsGrid.style.display = 'grid';
-        subjectsTableWrapper.style.display = 'none';
-    });
+    if (viewGridBtn && viewTableBtn) {
+        viewGridBtn.addEventListener('click', () => {
+            currentViewMode = 'grid';
+            viewGridBtn.classList.add('active');
+            viewTableBtn.classList.remove('active');
+            subjectsGrid.style.display = 'grid';
+            subjectsTableWrapper.style.display = 'none';
+        });
 
-    viewTableBtn.addEventListener('click', () => {
-        currentViewMode = 'table';
-        viewTableBtn.classList.add('active');
-        viewGridBtn.classList.remove('active');
-        subjectsGrid.style.display = 'none';
-        subjectsTableWrapper.style.display = 'block';
-    });
+        viewTableBtn.addEventListener('click', () => {
+            currentViewMode = 'table';
+            viewTableBtn.classList.add('active');
+            viewGridBtn.classList.remove('active');
+            subjectsGrid.style.display = 'none';
+            subjectsTableWrapper.style.display = 'block';
+        });
+    }
+
+    // -------------------------------------------------------------
+    // 🧭 NAVIGATION TAB SWITCHING & SMOOTH SCROLL HANDLERS
+    // -------------------------------------------------------------
+    const tabOverviewBtn = document.getElementById('tabOverviewBtn');
+    const tabAnalyticsBtn = document.getElementById('tabAnalyticsBtn');
+    const tabSubjectsBtn = document.getElementById('tabSubjectsBtn');
+
+    const mobileTabOverview = document.getElementById('mobileTabOverview');
+    const mobileTabAnalytics = document.getElementById('mobileTabAnalytics');
+    const mobileTabRefresh = document.getElementById('mobileTabRefresh');
+
+    function setActiveTab(tabName) {
+        // Desktop Tabs Active State
+        document.querySelectorAll('.nav-tab-btn').forEach(btn => btn.classList.remove('active'));
+        if (tabName === 'overview' && tabOverviewBtn) tabOverviewBtn.classList.add('active');
+        if (tabName === 'analytics' && tabAnalyticsBtn) tabAnalyticsBtn.classList.add('active');
+        if (tabName === 'subjects' && tabSubjectsBtn) tabSubjectsBtn.classList.add('active');
+
+        // Mobile Bottom Nav Active State
+        document.querySelectorAll('.mobile-nav-item').forEach(item => item.classList.remove('active'));
+        if (tabName === 'overview' && mobileTabOverview) mobileTabOverview.classList.add('active');
+        if (tabName === 'analytics' && mobileTabAnalytics) mobileTabAnalytics.classList.add('active');
+
+        // Smooth Scroll to Target Section
+        if (tabName === 'overview') {
+            const el = document.getElementById('summarySection') || dashboardView;
+            if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        } else if (tabName === 'analytics') {
+            const el = document.getElementById('chartsSection');
+            if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        } else if (tabName === 'subjects') {
+            const el = document.getElementById('controlsSection');
+            if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
+    }
+
+    if (tabOverviewBtn) tabOverviewBtn.addEventListener('click', () => setActiveTab('overview'));
+    if (tabAnalyticsBtn) tabAnalyticsBtn.addEventListener('click', () => setActiveTab('analytics'));
+    if (tabSubjectsBtn) tabSubjectsBtn.addEventListener('click', () => setActiveTab('subjects'));
+
+    if (mobileTabOverview) mobileTabOverview.addEventListener('click', () => setActiveTab('overview'));
+    if (mobileTabAnalytics) mobileTabAnalytics.addEventListener('click', () => setActiveTab('analytics'));
+
+    // -------------------------------------------------------------
+    // 👤 STUDENT PROFILE MODAL HANDLERS
+    // -------------------------------------------------------------
+    const profileModal = document.getElementById('profileModal');
+    const displayUserBadge = document.getElementById('displayUserBadge');
+    const viewProfileDetailsBtn = document.getElementById('viewProfileDetailsBtn');
+    const closeProfileModalBtn = document.getElementById('closeProfileModalBtn');
+    const modalRefreshBtn = document.getElementById('modalRefreshBtn');
+    const modalDownloadPdfBtn = document.getElementById('modalDownloadPdfBtn');
+    const modalLogoutBtn = document.getElementById('modalLogoutBtn');
+
+    function openProfileModal() {
+        if (profileModal) profileModal.style.display = 'flex';
+    }
+
+    function closeProfileModal() {
+        if (profileModal) profileModal.style.display = 'none';
+    }
+
+    if (displayUserBadge) {
+        displayUserBadge.style.cursor = 'pointer';
+        displayUserBadge.addEventListener('click', openProfileModal);
+    }
+
+    if (viewProfileDetailsBtn) {
+        viewProfileDetailsBtn.addEventListener('click', openProfileModal);
+    }
+
+    if (closeProfileModalBtn) {
+        closeProfileModalBtn.addEventListener('click', closeProfileModal);
+    }
+
+    if (profileModal) {
+        profileModal.addEventListener('click', (e) => {
+            if (e.target === profileModal) closeProfileModal();
+        });
+    }
+
+    if (modalRefreshBtn) {
+        modalRefreshBtn.addEventListener('click', () => {
+            closeProfileModal();
+            const username = studentIdInput.value.trim();
+            const password = passwordInput.value.trim();
+            if (username && password) fetchAttendance(username, password);
+        });
+    }
+
+    if (modalDownloadPdfBtn) {
+        modalDownloadPdfBtn.addEventListener('click', () => {
+            closeProfileModal();
+            downloadPdfReport();
+        });
+    }
+
+    if (modalLogoutBtn) {
+        modalLogoutBtn.addEventListener('click', () => {
+            closeProfileModal();
+            if (logoutBtn) logoutBtn.click();
+        });
+    }
 
     // Refresh Handler
-    refreshBtn.addEventListener('click', () => {
-        const username = studentIdInput.value.trim();
-        const password = passwordInput.value.trim();
-        if (username && password) {
-            fetchAttendance(username, password);
-        }
-    });
+    if (refreshBtn) {
+        refreshBtn.addEventListener('click', () => {
+            const username = studentIdInput.value.trim();
+            const password = passwordInput.value.trim();
+            if (username && password) {
+                fetchAttendance(username, password);
+            }
+        });
+    }
 
-    // Logout Handler - Clears session & data so user only logs out when clicking this
-    logoutBtn.addEventListener('click', () => {
-        localStorage.removeItem('mits_stu_id');
-        localStorage.removeItem('mits_stu_pass');
-        localStorage.removeItem('mits_attendance_cache');
-        currentAttendanceData = [];
-        studentIdInput.value = '';
-        passwordInput.value = '';
-        showLoginState();
-    });
+    // Mobile Bottom Tab Refresh Handler
+    if (mobileTabRefresh) {
+        mobileTabRefresh.addEventListener('click', () => {
+            const username = studentIdInput.value.trim();
+            const password = passwordInput.value.trim();
+            if (username && password) {
+                fetchAttendance(username, password);
+            }
+        });
+    }
+
+    // Logout Handler
+    if (logoutBtn) {
+        logoutBtn.addEventListener('click', () => {
+            localStorage.removeItem('mits_stu_id');
+            localStorage.removeItem('mits_stu_pass');
+            localStorage.removeItem('mits_attendance_cache');
+            localStorage.removeItem('mits_student_name');
+            localStorage.removeItem('mits_last_login');
+            currentAttendanceData = [];
+            currentStudentName = '';
+            currentRegisterNumber = '';
+            currentLastLogin = '';
+            studentIdInput.value = '';
+            passwordInput.value = '';
+            showLoginState();
+        });
+    }
+
+    // -------------------------------------------------------------
+    // ✉️ SEND ATTENDANCE REPORT MODAL & API HANDLERS
+    // -------------------------------------------------------------
+    const sendReportModal = document.getElementById('sendReportModal');
+    const sendReportBtn = document.getElementById('sendReportBtn');
+    const modalSendReportBtn = document.getElementById('modalSendReportBtn');
+    const closeSendReportModalBtn = document.getElementById('closeSendReportModalBtn');
+    const cancelSendBtn = document.getElementById('cancelSendBtn');
+    const confirmSendBtn = document.getElementById('confirmSendBtn');
+    const retrySendBtn = document.getElementById('retrySendBtn');
+    const sendModalRecipient = document.getElementById('sendModalRecipient');
+    const sendModalStudentName = document.getElementById('sendModalStudentName');
+    const sendProgressBox = document.getElementById('sendProgressBox');
+    const sendReportAlert = document.getElementById('sendReportAlert');
+    const sendReportErrorMessage = document.getElementById('sendReportErrorMessage');
+    const sendModalActions = document.getElementById('sendModalActions');
+
+    function openSendReportModal() {
+        const regNo = currentRegisterNumber || (studentIdInput ? studentIdInput.value.trim().toUpperCase() : '');
+        if (!regNo) {
+            showToast('Please login to fetch attendance data before sending report.', 'error');
+            return;
+        }
+        const recipientEmail = `${regNo}@mits.ac.in`;
+        const stuName = currentStudentName || regNo;
+
+        if (sendModalRecipient) sendModalRecipient.textContent = recipientEmail;
+        if (sendModalStudentName) sendModalStudentName.textContent = stuName;
+
+        // Reset progress & alert state
+        if (sendProgressBox) sendProgressBox.style.display = 'none';
+        if (sendReportAlert) sendReportAlert.style.display = 'none';
+        if (sendModalActions) sendModalActions.style.display = 'flex';
+        if (confirmSendBtn) confirmSendBtn.style.display = 'block';
+        if (retrySendBtn) retrySendBtn.style.display = 'none';
+        if (cancelSendBtn) cancelSendBtn.style.display = 'block';
+
+        resetProgressSteps();
+
+        if (sendReportModal) sendReportModal.style.display = 'flex';
+    }
+
+    function closeSendReportModal() {
+        if (sendReportModal) sendReportModal.style.display = 'none';
+    }
+
+    function resetProgressSteps() {
+        for (let i = 1; i <= 4; i++) {
+            const stepEl = document.getElementById(`sendStep${i}`);
+            if (stepEl) {
+                stepEl.className = 'progress-step-item';
+                const spin = stepEl.querySelector('.step-icon-spin');
+                const check = stepEl.querySelector('.step-icon-check');
+                if (spin) spin.style.display = 'none';
+                if (check) check.style.display = 'none';
+            }
+        }
+    }
+
+    function setStepState(stepNum, state) {
+        const stepEl = document.getElementById(`sendStep${stepNum}`);
+        if (!stepEl) return;
+
+        const spin = stepEl.querySelector('.step-icon-spin');
+        const check = stepEl.querySelector('.step-icon-check');
+
+        if (state === 'active') {
+            stepEl.className = 'progress-step-item active';
+            if (spin) spin.style.display = 'inline-block';
+            if (check) check.style.display = 'none';
+        } else if (state === 'completed') {
+            stepEl.className = 'progress-step-item completed';
+            if (spin) spin.style.display = 'none';
+            if (check) check.style.display = 'inline-block';
+        } else {
+            stepEl.className = 'progress-step-item';
+            if (spin) spin.style.display = 'none';
+            if (check) check.style.display = 'none';
+        }
+    }
+
+    async function handleSendReport() {
+        const data = getExportData();
+        if (!data || data.length === 0) {
+            showToast('No attendance records found to report.', 'error');
+            return;
+        }
+
+        const regNo = currentRegisterNumber || (studentIdInput ? studentIdInput.value.trim().toUpperCase() : '');
+        const stuName = currentStudentName || regNo;
+
+        if (sendReportAlert) sendReportAlert.style.display = 'none';
+        if (sendProgressBox) sendProgressBox.style.display = 'block';
+        if (confirmSendBtn) confirmSendBtn.style.display = 'none';
+        if (retrySendBtn) retrySendBtn.style.display = 'none';
+
+        resetProgressSteps();
+
+        // Step 1: Generating Report...
+        setStepState(1, 'active');
+
+        await new Promise(r => setTimeout(r, 300));
+        setStepState(1, 'completed');
+        setStepState(2, 'active'); // Creating PDF...
+
+        await new Promise(r => setTimeout(r, 400));
+        setStepState(2, 'completed');
+        setStepState(3, 'active'); // Sending Email...
+
+        try {
+            const response = await fetch('/api/send-report', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    register_number: regNo,
+                    student_name: stuName,
+                    data: data
+                })
+            });
+
+            let result;
+            try {
+                result = await response.json();
+            } catch (err) {
+                result = { error: `Server response error (${response.status})` };
+            }
+
+            if (response.ok && result.success) {
+                setStepState(3, 'completed');
+                setStepState(4, 'completed'); // Email Sent Successfully
+
+                await new Promise(r => setTimeout(r, 1000));
+                closeSendReportModal();
+                showToast(`Attendance report sent successfully to ${regNo}@mits.ac.in`, 'success');
+            } else {
+                if (sendProgressBox) sendProgressBox.style.display = 'none';
+                const errMsg = result.error || 'Failed to send attendance report email.';
+                if (sendReportErrorMessage) sendReportErrorMessage.textContent = errMsg;
+                if (sendReportAlert) sendReportAlert.style.display = 'flex';
+
+                if (retrySendBtn) retrySendBtn.style.display = 'block';
+                if (confirmSendBtn) confirmSendBtn.style.display = 'none';
+            }
+        } catch (netErr) {
+            if (sendProgressBox) sendProgressBox.style.display = 'none';
+            const errMsg = 'Network error: Unable to connect to backend server.';
+            if (sendReportErrorMessage) sendReportErrorMessage.textContent = errMsg;
+            if (sendReportAlert) sendReportAlert.style.display = 'flex';
+
+            if (retrySendBtn) retrySendBtn.style.display = 'block';
+            if (confirmSendBtn) confirmSendBtn.style.display = 'none';
+        }
+    }
+
+    if (sendReportBtn) sendReportBtn.addEventListener('click', openSendReportModal);
+    if (modalSendReportBtn) {
+        modalSendReportBtn.addEventListener('click', () => {
+            closeProfileModal();
+            openSendReportModal();
+        });
+    }
+    if (closeSendReportModalBtn) closeSendReportModalBtn.addEventListener('click', closeSendReportModal);
+    if (cancelSendBtn) cancelSendBtn.addEventListener('click', closeSendReportModal);
+    if (confirmSendBtn) confirmSendBtn.addEventListener('click', handleSendReport);
+    if (retrySendBtn) retrySendBtn.addEventListener('click', handleSendReport);
 
     // Print / Export PDF Handler
     if (typeof exportPdfBtn !== 'undefined' && exportPdfBtn) {
@@ -507,6 +1074,8 @@ document.addEventListener('DOMContentLoaded', () => {
         if (dashboardView) dashboardView.style.display = 'none';
         if (navbar) navbar.style.display = 'flex';
         if (navActions) navActions.style.display = 'none';
+        if (navTabs) navTabs.style.display = 'none';
+        if (mobileBottomNav) mobileBottomNav.style.display = 'none';
     }
 
     function showLoadingState() {
@@ -515,6 +1084,8 @@ document.addEventListener('DOMContentLoaded', () => {
         if (dashboardView) dashboardView.style.display = 'none';
         if (navbar) navbar.style.display = 'flex';
         if (navActions) navActions.style.display = 'none';
+        if (navTabs) navTabs.style.display = 'none';
+        if (mobileBottomNav) mobileBottomNav.style.display = 'none';
     }
 
     function showDashboardState() {
@@ -523,11 +1094,12 @@ document.addEventListener('DOMContentLoaded', () => {
         if (dashboardView) dashboardView.style.display = 'flex';
         if (navbar) navbar.style.display = 'flex';
         if (navActions) navActions.style.display = 'flex';
+        if (navTabs) navTabs.style.display = 'flex';
+        if (mobileBottomNav) mobileBottomNav.style.display = 'flex';
     }
 
-
     function updateLoadingStep(stepNum, text) {
-        loadingStatusText.textContent = text;
+        if (loadingStatusText) loadingStatusText.textContent = text;
         const loadingBarFill = document.getElementById('loadingBarFill');
         const loadingPercentText = document.getElementById('loadingPercentText');
 
@@ -540,6 +1112,7 @@ document.addEventListener('DOMContentLoaded', () => {
         if (loadingPercentText) loadingPercentText.textContent = `${perc}%`;
 
         [step1, step2, step3].forEach((el, index) => {
+            if (!el) return;
             if (index + 1 < stepNum) {
                 el.className = 'step-item done';
             } else if (index + 1 === stepNum) {
@@ -550,14 +1123,13 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-
     function showAlert(msg) {
-        alertMessage.textContent = msg;
-        loginAlert.style.display = 'flex';
+        if (alertMessage) alertMessage.textContent = msg;
+        if (loginAlert) loginAlert.style.display = 'flex';
     }
 
     function hideAlert() {
-        loginAlert.style.display = 'none';
+        if (loginAlert) loginAlert.style.display = 'none';
     }
 
     function escapeHtml(str) {
@@ -577,77 +1149,176 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    // Custom PWA Install Prompt (A2HS) Logic
+    // -------------------------------------------------------------
+    // 📲 PWA APP INSTALL & SWIPEABLE TOP NOTIFICATION MODULE
+    // -------------------------------------------------------------
     let deferredPrompt = null;
+
+    const topNotificationBar = document.getElementById('topNotificationBar');
+    const topNotifCloseBtn = document.getElementById('topNotifCloseBtn');
+    const topNotifInstallBtn = document.getElementById('topNotifInstallBtn');
+
     const installModal = document.getElementById('installModal');
     const installNowBtn = document.getElementById('installNowBtn');
     const installLaterBtn = document.getElementById('installLaterBtn');
     const pwaInstallHeaderBtn = document.getElementById('pwaInstallHeaderBtn');
 
+    const bannerInstallBtn = document.getElementById('bannerInstallBtn');
+    const bannerHowToInstallBtn = document.getElementById('bannerHowToInstallBtn');
+    const loginInstallAppBtn = document.getElementById('loginInstallAppBtn');
+    const modalInstallAppBtn = document.getElementById('modalInstallAppBtn');
+
+    const installGuideModal = document.getElementById('installGuideModal');
+    const closeInstallGuideModalBtn = document.getElementById('closeInstallGuideModalBtn');
+    const closeInstallGuideBtn = document.getElementById('closeInstallGuideBtn');
+    const guideInstallNowBtn = document.getElementById('guideInstallNowBtn');
+
+    // Check if running as standalone app
+    const isStandalone = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone;
+
+    // Check if top notification was dismissed
+    if (topNotificationBar) {
+        if (localStorage.getItem('top_notif_dismissed') === 'true' || isStandalone) {
+            topNotificationBar.style.display = 'none';
+        }
+    }
+
+    // Function to trigger App Installation
+    async function triggerAppInstall() {
+        if (deferredPrompt) {
+            deferredPrompt.prompt();
+            const { outcome } = await deferredPrompt.userChoice;
+            console.log(`[PWA] Install prompt outcome: ${outcome}`);
+            if (outcome === 'accepted') {
+                localStorage.setItem('pwa_installed', 'true');
+                if (pwaInstallHeaderBtn) pwaInstallHeaderBtn.style.display = 'none';
+                dismissTopNotification();
+            }
+            deferredPrompt = null;
+        } else {
+            // Open Install Guide Modal if browser prompt is unavailable (e.g. iOS Safari)
+            openInstallGuideModal();
+        }
+    }
+
+    function openInstallGuideModal() {
+        if (installGuideModal) installGuideModal.style.display = 'flex';
+    }
+
+    function closeInstallGuideModal() {
+        if (installGuideModal) installGuideModal.style.display = 'none';
+    }
+
+    function dismissTopNotification() {
+        if (!topNotificationBar) return;
+        topNotificationBar.classList.add('dismissed');
+        localStorage.setItem('top_notif_dismissed', 'true');
+        setTimeout(() => {
+            topNotificationBar.style.display = 'none';
+        }, 350);
+    }
+
+    // Touch & Mouse Drag / Swipe to Hide for Top Notification Bar
+    if (topNotificationBar) {
+        let startY = 0;
+        let currentY = 0;
+        let isDragging = false;
+
+        function onDragStart(e) {
+            isDragging = true;
+            startY = e.touches ? e.touches[0].clientY : e.clientY;
+            topNotificationBar.classList.add('dragging');
+        }
+
+        function onDragMove(e) {
+            if (!isDragging) return;
+            currentY = e.touches ? e.touches[0].clientY : e.clientY;
+            const deltaY = currentY - startY;
+
+            // Only drag upwards or slightly downwards
+            if (deltaY < 0) {
+                const opacity = Math.max(0, 1 + deltaY / 120);
+                topNotificationBar.style.transform = `translate(-50%, ${deltaY}px)`;
+                topNotificationBar.style.opacity = opacity;
+            }
+        }
+
+        function onDragEnd(e) {
+            if (!isDragging) return;
+            isDragging = false;
+            topNotificationBar.classList.remove('dragging');
+
+            const deltaY = currentY - startY;
+            if (deltaY < -40) {
+                // Swipe up threshold met -> dismiss
+                dismissTopNotification();
+            } else {
+                // Reset position
+                topNotificationBar.style.transform = 'translateX(-50%)';
+                topNotificationBar.style.opacity = '1';
+            }
+        }
+
+        topNotificationBar.addEventListener('touchstart', onDragStart, { passive: true });
+        topNotificationBar.addEventListener('touchmove', onDragMove, { passive: true });
+        topNotificationBar.addEventListener('touchend', onDragEnd);
+
+        topNotificationBar.addEventListener('mousedown', onDragStart);
+        window.addEventListener('mousemove', onDragMove);
+        window.addEventListener('mouseup', onDragEnd);
+    }
+
+    if (topNotifCloseBtn) topNotifCloseBtn.addEventListener('click', dismissTopNotification);
+    if (topNotifInstallBtn) topNotifInstallBtn.addEventListener('click', triggerAppInstall);
+    if (bannerInstallBtn) bannerInstallBtn.addEventListener('click', triggerAppInstall);
+    if (loginInstallAppBtn) loginInstallAppBtn.addEventListener('click', triggerAppInstall);
+    if (modalInstallAppBtn) modalInstallAppBtn.addEventListener('click', triggerAppInstall);
+    if (guideInstallNowBtn) guideInstallNowBtn.addEventListener('click', triggerAppInstall);
+
+    if (bannerHowToInstallBtn) bannerHowToInstallBtn.addEventListener('click', openInstallGuideModal);
+    if (closeInstallGuideModalBtn) closeInstallGuideModalBtn.addEventListener('click', closeInstallGuideModal);
+    if (closeInstallGuideBtn) closeInstallGuideBtn.addEventListener('click', closeInstallGuideModal);
+
+    // Guide Modal Tabs Switcher (Android / iOS / Desktop)
+    const guideTabItems = document.querySelectorAll('.guide-tab-item');
+    guideTabItems.forEach(tab => {
+        tab.addEventListener('click', () => {
+            guideTabItems.forEach(t => t.classList.remove('active'));
+            tab.classList.add('active');
+
+            const targetGuide = tab.dataset.guide;
+            const panels = {
+                android: document.getElementById('guideAndroid'),
+                ios: document.getElementById('guideIos'),
+                desktop: document.getElementById('guideDesktop')
+            };
+
+            Object.keys(panels).forEach(key => {
+                if (panels[key]) {
+                    panels[key].style.display = (key === targetGuide) ? 'block' : 'none';
+                }
+            });
+        });
+    });
+
+    // PWA Install Event Listener
     window.addEventListener('beforeinstallprompt', (e) => {
-        // Prevent default mini-infobar from showing
         e.preventDefault();
         deferredPrompt = e;
 
-        // Check if user already dismissed or installed
-        const isDismissed = localStorage.getItem('pwa_dismissed') === 'true';
-        const isStandalone = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone;
-
         if (!isStandalone) {
-            if (pwaInstallHeaderBtn) {
-                pwaInstallHeaderBtn.style.display = 'inline-flex';
-            }
-
-            if (!isDismissed && installModal) {
-                setTimeout(() => {
-                    installModal.style.display = 'flex';
-                }, 2000);
+            if (pwaInstallHeaderBtn) pwaInstallHeaderBtn.style.display = 'inline-flex';
+            if (topNotificationBar && localStorage.getItem('top_notif_dismissed') !== 'true') {
+                topNotificationBar.style.display = 'flex';
             }
         }
     });
 
-    if (installNowBtn) {
-        installNowBtn.addEventListener('click', async () => {
-            if (installModal) installModal.style.display = 'none';
-            if (deferredPrompt) {
-                deferredPrompt.prompt();
-                const { outcome } = await deferredPrompt.userChoice;
-                console.log(`[PWA] Install prompt outcome: ${outcome}`);
-                if (outcome === 'accepted') {
-                    localStorage.setItem('pwa_installed', 'true');
-                }
-                deferredPrompt = null;
-            }
-        });
-    }
+    if (pwaInstallHeaderBtn) pwaInstallHeaderBtn.addEventListener('click', triggerAppInstall);
 
-    if (installLaterBtn) {
-        installLaterBtn.addEventListener('click', () => {
-            if (installModal) installModal.style.display = 'none';
-            localStorage.setItem('pwa_dismissed', 'true');
-        });
-    }
-
-    if (pwaInstallHeaderBtn) {
-        pwaInstallHeaderBtn.addEventListener('click', async () => {
-            if (deferredPrompt) {
-                deferredPrompt.prompt();
-                const { outcome } = await deferredPrompt.userChoice;
-                if (outcome === 'accepted') {
-                    localStorage.setItem('pwa_installed', 'true');
-                    pwaInstallHeaderBtn.style.display = 'none';
-                }
-                deferredPrompt = null;
-            } else {
-                alert('App is ready to install! Open your browser menu (⋮) and tap "Add to Home screen".');
-            }
-        });
-    }
-
-    // Hide install header button if already in standalone mode
     window.addEventListener('appinstalled', () => {
         console.log('[PWA] App successfully installed!');
-        if (installModal) installModal.style.display = 'none';
+        dismissTopNotification();
         if (pwaInstallHeaderBtn) pwaInstallHeaderBtn.style.display = 'none';
         localStorage.setItem('pwa_installed', 'true');
     });
@@ -686,7 +1357,6 @@ document.addEventListener('DOMContentLoaded', () => {
         }, 3500);
     }
 
-    // Helper to get attendance data safely (from state or DOM fallback)
     function getExportData() {
         if (Array.isArray(currentAttendanceData) && currentAttendanceData.length > 0) {
             return currentAttendanceData;
@@ -694,12 +1364,12 @@ document.addEventListener('DOMContentLoaded', () => {
         const data = [];
         const cards = document.querySelectorAll('.subject-card');
         cards.forEach(card => {
-            const subjectEl = card.querySelector('.subject-name');
-            const countEl = card.querySelector('.count-val') || card.querySelector('.attended-count');
-            const percEl = card.querySelector('.perc-val') || card.querySelector('.subject-perc');
+            const subjectEl = card.querySelector('.subject-title');
+            const countEl = card.querySelector('.subject-counts');
+            const percEl = card.querySelector('.subject-perc');
             if (subjectEl) {
                 const subject = subjectEl.textContent.trim();
-                const counts = countEl ? countEl.textContent.trim().split('/') : ['0', '0'];
+                const counts = countEl ? countEl.textContent.replace(/[^\d/]/g, '').split('/') : ['0', '0'];
                 const attended = counts[0]?.trim() || '0';
                 const total = counts[1]?.trim() || '0';
                 const percentage = percEl ? percEl.textContent.replace('%', '').trim() : '0';
@@ -713,7 +1383,7 @@ document.addEventListener('DOMContentLoaded', () => {
     async function downloadPdfReport() {
         const data = getExportData();
         if (!data || data.length === 0) {
-            showToast('❌ Unable to complete the requested action. Please try again.', 'error');
+            showToast('Unable to complete action. Please login first.', 'error');
             alert('Please login to fetch attendance data before downloading PDF.');
             return;
         }
@@ -741,7 +1411,7 @@ document.addEventListener('DOMContentLoaded', () => {
             const doc = new jsPDFObj('p', 'mm', 'a4');
             const pageWidth = doc.internal.pageSize.getWidth();
 
-            const primaryColor = [37, 99, 235];   // Royal Blue #2563EB
+            const primaryColor = [99, 102, 241];   // Indigo #6366F1
             const darkColor = [15, 23, 42];      // Slate 900 #0F172A
             const textSecondary = [71, 85, 105];  // Slate 600 #475569
 
@@ -795,9 +1465,10 @@ document.addEventListener('DOMContentLoaded', () => {
             // 4. Subject Table (jsPDF AutoTable)
             const tableRows = data.map((item, index) => {
                 const percNum = parseFloat(item.percentage) || 0;
-                let statusStr = '🟢 Safe';
-                if (percNum < 65) statusStr = '🔴 Critical';
-                else if (percNum < 75) statusStr = '🟡 Warning';
+                let statusStr = 'Safe';
+                if (percNum < 60) statusStr = 'Critical';
+                else if (percNum < 70) statusStr = 'Warning';
+                else if (percNum < 85) statusStr = 'Good';
 
                 return [
                     index + 1,
@@ -831,7 +1502,21 @@ document.addEventListener('DOMContentLoaded', () => {
                         2: { cellWidth: 22, halign: 'center' },
                         3: { cellWidth: 24, halign: 'center' },
                         4: { cellWidth: 24, halign: 'center' },
-                        5: { cellWidth: 22, halign: 'center' }
+                        5: { cellWidth: 22, halign: 'center', fontStyle: 'bold' }
+                    },
+                    didParseCell: function(data) {
+                        if (data.section === 'body' && data.column.index === 5) {
+                            const val = data.cell.raw;
+                            if (val === 'Critical') {
+                                data.cell.styles.textColor = [220, 38, 38];
+                            } else if (val === 'Warning') {
+                                data.cell.styles.textColor = [217, 119, 6];
+                            } else if (val === 'Good') {
+                                data.cell.styles.textColor = [37, 99, 235];
+                            } else if (val === 'Safe') {
+                                data.cell.styles.textColor = [5, 150, 105];
+                            }
+                        }
                     }
                 });
             }
@@ -852,12 +1537,12 @@ document.addEventListener('DOMContentLoaded', () => {
             showToast('✅ Attendance report downloaded successfully.', 'success');
         } catch (err) {
             console.error('PDF Generation Error:', err);
-            showToast('❌ Unable to complete the requested action. Please try again.', 'error');
+            showToast('Unable to generate PDF. Printing page...', 'error');
             window.print();
         } finally {
             if (downloadPdfBtn) {
                 downloadPdfBtn.disabled = false;
-                downloadPdfBtn.innerHTML = '<i class="fa-solid fa-file-pdf"></i> <span>Download PDF</span>';
+                downloadPdfBtn.innerHTML = '<i class="fa-solid fa-file-pdf text-danger"></i> <span class="hide-mobile">PDF Report</span>';
             }
         }
     }
@@ -866,7 +1551,7 @@ document.addEventListener('DOMContentLoaded', () => {
     async function copyReportToClipboard() {
         const data = getExportData();
         if (!data || data.length === 0) {
-            showToast('❌ Unable to complete the requested action. Please try again.', 'error');
+            showToast('Unable to copy report. Please login first.', 'error');
             alert('Please login to fetch attendance data before copying report.');
             return;
         }
@@ -924,10 +1609,7 @@ document.addEventListener('DOMContentLoaded', () => {
             showToast('✅ Attendance report copied to clipboard.', 'success');
         } catch (err) {
             console.error('Clipboard Error:', err);
-            showToast('❌ Unable to complete the requested action. Please try again.', 'error');
+            showToast('Unable to copy to clipboard.', 'error');
         }
     }
 });
-
-
-
