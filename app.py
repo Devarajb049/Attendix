@@ -105,6 +105,31 @@ async def serve_offline():
     return FileResponse(offline_path)
 
 
+@app.get("/install", response_class=FileResponse)
+@app.get("/install.html", response_class=FileResponse)
+async def serve_install_page():
+    install_path = os.path.join(static_dir, "install.html")
+    if os.path.exists(install_path):
+        return FileResponse(install_path)
+    return FileResponse(os.path.join(static_dir, "index.html"))
+
+
+@app.get("/404", response_class=FileResponse)
+@app.get("/404.html", response_class=FileResponse)
+async def serve_404_page():
+    notfound_path = os.path.join(static_dir, "404.html")
+    if os.path.exists(notfound_path):
+        return FileResponse(notfound_path, status_code=404)
+    return JSONResponse({"error": "Page not found"}, status_code=404)
+
+
+@app.exception_handler(404)
+async def custom_404_handler(request, exc):
+    notfound_path = os.path.join(static_dir, "404.html")
+    if os.path.exists(notfound_path):
+        return FileResponse(notfound_path, status_code=404)
+    return JSONResponse({"error": "Page not found"}, status_code=404)
+
 
 @app.get("/health")
 async def health_check():

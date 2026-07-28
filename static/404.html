@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>404 - Page Not Found | Attendix</title>
+    <link rel="icon" type="image/x-icon" href="/favicon.ico">
+    <link rel="manifest" href="/manifest.json">
+    <meta name="theme-color" content="#090d16">
+
+    <!-- Modern Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Plus+Jakarta+Sans:wght@700;800&display=swap" rel="stylesheet">
+
+    <!-- FontAwesome 6 Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <!-- Global Enterprise Stylesheet -->
+    <link rel="stylesheet" href="/static/style.css">
+
+    <style>
+        .notfound-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 85vh;
+            text-align: center;
+            padding: 24px;
+        }
+
+        .notfound-card {
+            max-width: 520px;
+            width: 100%;
+            padding: 42px 32px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .notfound-badge {
+            font-size: 11px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: var(--secondary);
+            background: rgba(56, 189, 248, 0.1);
+            border: 1px solid rgba(56, 189, 248, 0.25);
+            padding: 4px 14px;
+            border-radius: var(--radius-pill);
+            margin-bottom: 20px;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .notfound-number {
+            font-family: var(--font-heading);
+            font-size: 96px;
+            font-weight: 800;
+            line-height: 1;
+            background: linear-gradient(135deg, var(--primary), var(--secondary), var(--accent));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 10px;
+            letter-spacing: -3px;
+            filter: drop-shadow(0 0 25px rgba(99, 102, 241, 0.3));
+        }
+
+        .notfound-icon-wrap {
+            width: 72px;
+            height: 72px;
+            border-radius: 20px;
+            background: linear-gradient(135deg, rgba(99, 102, 241, 0.15), rgba(56, 189, 248, 0.15));
+            border: 1px solid var(--bg-card-border-hover);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 32px;
+            color: var(--primary);
+            margin-bottom: 20px;
+            animation: floatIcon 4s ease-in-out infinite alternate;
+        }
+
+        @keyframes floatIcon {
+            0% { transform: translateY(0) rotate(0deg); }
+            100% { transform: translateY(-10px) rotate(6deg); }
+        }
+
+        .notfound-title {
+            font-family: var(--font-heading);
+            font-size: 24px;
+            font-weight: 800;
+            color: var(--text-primary);
+            margin-bottom: 8px;
+        }
+
+        .notfound-desc {
+            font-size: 14px;
+            color: var(--text-secondary);
+            line-height: 1.6;
+            margin-bottom: 28px;
+            max-width: 420px;
+        }
+
+        .notfound-actions {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            width: 100%;
+        }
+
+        .notfound-actions .btn {
+            height: 44px;
+            font-size: 14px;
+            border-radius: 12px;
+        }
+    </style>
+</head>
+<body>
+    <!-- Dynamic Ambient Background Spheres -->
+    <div class="background-glow">
+        <div class="glow-sphere sphere-1"></div>
+        <div class="glow-sphere sphere-2"></div>
+        <div class="glow-sphere sphere-3"></div>
+    </div>
+
+    <div class="app-container">
+        <!-- Navigation Header -->
+        <header class="navbar glass-header">
+            <div class="brand">
+                <div class="brand-logo shadow-glow">
+                    <img src="/static/logo.png" alt="Attendix Logo" class="app-brand-img">
+                </div>
+                <div class="brand-text">
+                    <span class="brand-title">Attendix</span>
+                </div>
+            </div>
+
+            <div class="header-tools" style="margin-left: auto;">
+                <button class="btn btn-outline btn-sm header-action-btn" id="themeToggleBtn" title="Toggle Light/Dark Theme">
+                    <i class="fa-solid fa-moon" id="themeToggleIcon"></i>
+                </button>
+            </div>
+        </header>
+
+        <main class="notfound-container">
+            <div class="notfound-card glass-card shadow-glow animate-scale-up">
+                <div class="notfound-badge">
+                    <i class="fa-solid fa-triangle-exclamation text-warning"></i> Error 404
+                </div>
+
+                <div class="notfound-icon-wrap shadow-glow">
+                    <i class="fa-solid fa-compass-drafting"></i>
+                </div>
+
+                <div class="notfound-number">404</div>
+
+                <h1 class="notfound-title">Page Not Found</h1>
+                <p class="notfound-desc">
+                    The requested page or endpoint doesn't exist, has been moved, or is temporarily unavailable.
+                </p>
+
+                <div class="notfound-actions">
+                    <a href="/" class="btn btn-primary btn-block ripple">
+                        <i class="fa-solid fa-house"></i> <span>Return to Attendix Dashboard</span>
+                    </a>
+                    <a href="/" class="btn btn-outline btn-block ripple">
+                        <i class="fa-solid fa-right-to-bracket text-primary"></i> <span>Student Login</span>
+                    </a>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script>
+        // Theme Switcher for 404 Page
+        const themeToggleBtn = document.getElementById('themeToggleBtn');
+        const themeToggleIcon = document.getElementById('themeToggleIcon');
+
+        function setTheme(theme) {
+            document.documentElement.setAttribute('data-theme', theme);
+            localStorage.setItem('theme', theme);
+            if (themeToggleIcon) {
+                themeToggleIcon.className = theme === 'dark' ? 'fa-solid fa-moon' : 'fa-solid fa-sun';
+            }
+        }
+
+        const savedTheme = localStorage.getItem('theme') || 'dark';
+        setTheme(savedTheme);
+
+        if (themeToggleBtn) {
+            themeToggleBtn.addEventListener('click', () => {
+                const currentTheme = document.documentElement.getAttribute('data-theme') || 'dark';
+                const nextTheme = currentTheme === 'dark' ? 'light' : 'dark';
+                setTheme(nextTheme);
+            });
+        }
+    </script>
+</body>
+</html>
