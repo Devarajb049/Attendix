@@ -54,13 +54,14 @@ document.addEventListener('DOMContentLoaded', () => {
     const themeToggleIcon = document.getElementById('themeToggleIcon');
 
     // State Variables
+    const INVALID_STUDENT_NAMES = ['code', 'subject code', 'course code', 'student', 'name', 'student name', 'status', 'title'];
     let currentAttendanceData = [];
     let currentViewMode = 'grid'; // 'grid' or 'table'
     let selectedTargetPerc = 75; // Default target percentage
     let barChartInstance = null;
     let doughnutChartInstance = null;
     let currentStudentName = localStorage.getItem('mits_student_name') || '';
-    if (currentStudentName && ['code', 'subject code', 'course code', 'student', 'name', 'student name', 'status', 'title'].includes(currentStudentName.trim().toLowerCase())) {
+    if (currentStudentName && INVALID_STUDENT_NAMES.includes(currentStudentName.trim().toLowerCase())) {
         currentStudentName = '';
         localStorage.removeItem('mits_student_name');
     }
@@ -252,7 +253,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 }));
                 currentRegisterNumber = username.toUpperCase();
                 const rawName = (result.student_name && result.student_name.trim()) ? result.student_name.trim() : '';
-                currentStudentName = (rawName && !invalidNames.includes(rawName.toLowerCase())) ? rawName : '';
+                currentStudentName = (rawName && !INVALID_STUDENT_NAMES.includes(rawName.toLowerCase())) ? rawName : '';
                 currentLastLogin = new Date().toLocaleString('en-US', { dateStyle: 'medium', timeStyle: 'short' });
 
 
@@ -367,8 +368,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const modalStatusBadge = document.getElementById('modalStatusBadge');
 
         const activeRegNo = currentRegisterNumber || (displayUsername ? displayUsername.textContent.trim() : 'Student');
-        const invalidNames = ['code', 'subject code', 'course code', 'student', 'name', 'student name', 'status', 'title'];
-        const isNameValid = currentStudentName && !invalidNames.includes(currentStudentName.trim().toLowerCase());
+        const isNameValid = currentStudentName && !INVALID_STUDENT_NAMES.includes(currentStudentName.trim().toLowerCase());
         const activeName = isNameValid ? currentStudentName : activeRegNo;
         const activeLogin = currentLastLogin || 'Just now';
 

@@ -1,4 +1,4 @@
-const CACHE_NAME = 'mits-ims-pwa-v6';
+const CACHE_NAME = 'mits-ims-pwa-v7';
 const ASSETS_TO_CACHE = [
   '/',
   '/static/index.html',

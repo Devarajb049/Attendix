@@ -42,6 +42,8 @@
 
     --shadow-card: 0 10px 30px -10px rgba(0, 0, 0, 0.5);
     --shadow-glow: 0 0 25px rgba(99, 102, 241, 0.25);
+    --input-bg: rgba(0, 0, 0, 0.2);
+    --footer-bg: rgba(0, 0, 0, 0.18);
     --transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
@@ -75,6 +77,8 @@
 
     --shadow-card: 0 10px 30px -10px rgba(0, 0, 0, 0.06);
     --shadow-glow: 0 0 20px rgba(79, 70, 229, 0.12);
+    --input-bg: #f1f5f9;
+    --footer-bg: rgba(241, 245, 249, 0.85);
 }
 
 /* LIGHT MODE CONTAINER & UI OVERRIDES */
@@ -553,7 +557,7 @@ body {
 .input-wrapper input {
     width: 100%;
     padding: 12px 14px 12px 40px;
-    background: rgba(0, 0, 0, 0.15);
+    background: var(--input-bg);
     border: 1px solid var(--bg-card-border);
     border-radius: var(--radius-sm);
     color: var(--text-primary);
@@ -621,7 +625,7 @@ body {
 
 .card-footer {
     padding: 16px 28px;
-    background: rgba(0, 0, 0, 0.15);
+    background: var(--footer-bg);
     border-top: 1px solid var(--bg-card-border);
     font-size: 11px;
     color: var(--text-muted);
