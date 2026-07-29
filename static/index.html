@@ -8,13 +8,13 @@
     <meta name="description"
         content="Track and calculate your student attendance, overall percentage, target bunks, and subject analytics with Attendix.">
     <!-- PWA Configuration Meta Tags -->
-    <link rel="manifest" href="/manifest.json">
+    <link rel="manifest" href="manifest.json">
     <meta name="theme-color" content="#090d16">
     <meta name="mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="apple-mobile-web-app-title" content="Attendix">
-    <link rel="apple-touch-icon" href="/static/icons/apple-touch-icon.png">
+    <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
 
     <!-- Google Fonts: Inter & Plus Jakarta Sans -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -30,7 +30,7 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.31/jspdf.plugin.autotable.min.js"></script>
     <!-- Custom Modern CSS -->
-    <link rel="stylesheet" href="/static/style.css">
+    <link rel="stylesheet" href="style.css">
 </head>
 
 <body>
@@ -148,69 +148,6 @@
         </div>
     </div>
 
-    <!-- App Installation Guide Modal Overlay -->
-    <div class="install-modal-overlay" id="installGuideModal" style="display: none;">
-        <div class="install-modal-card glass-card animate-scale-up" style="max-width: 520px;">
-            <button class="profile-modal-close" id="closeInstallGuideModalBtn" title="Close"><i
-                    class="fa-solid fa-xmark"></i></button>
-            <div class="install-header">
-                <div class="install-icon-wrap shadow-glow">
-                    <i class="fa-solid fa-mobile-screen-button"></i>
-                </div>
-                <h3>How to Install Attendix App</h3>
-                <p>Install Attendix directly onto your smartphone or computer for an instant app experience.</p>
-            </div>
-
-            <div class="install-guide-tabs">
-                <div class="guide-tab-item active" data-guide="android"><i class="fa-brands fa-android"></i> Android
-                </div>
-                <div class="guide-tab-item" data-guide="ios"><i class="fa-brands fa-apple"></i> iOS / iPhone</div>
-                <div class="guide-tab-item" data-guide="desktop"><i class="fa-solid fa-desktop"></i> Desktop</div>
-            </div>
-
-            <div class="guide-content-box">
-                <div class="guide-panel active" id="guideAndroid">
-                    <ol class="guide-steps">
-                        <li><span>1</span> Open <strong>Attendix</strong> in Chrome or Edge browser on your Android
-                            device.</li>
-                        <li><span>2</span> Tap the <strong>three dots menu (⋮)</strong> in the top right corner.</li>
-                        <li><span>3</span> Select <strong>"Install app"</strong> or <strong>"Add to Home
-                                screen"</strong>.</li>
-                        <li><span>4</span> Confirm by tapping <strong>Install</strong> to launch Attendix as a native
-                            app!</li>
-                    </ol>
-                </div>
-                <div class="guide-panel" id="guideIos" style="display: none;">
-                    <ol class="guide-steps">
-                        <li><span>1</span> Open <strong>Attendix</strong> in <strong>Safari</strong> on your iPhone or
-                            iPad.</li>
-                        <li><span>2</span> Tap the <strong>Share button</strong> at the bottom navigation bar.</li>
-                        <li><span>3</span> Scroll down and tap <strong>"Add to Home Screen"</strong>.</li>
-                        <li><span>4</span> Tap <strong>Add</strong> in the top right to place Attendix on your home
-                            screen.</li>
-                    </ol>
-                </div>
-                <div class="guide-panel" id="guideDesktop" style="display: none;">
-                    <ol class="guide-steps">
-                        <li><span>1</span> Open <strong>Attendix</strong> in Chrome, Edge, or Brave browser.</li>
-                        <li><span>2</span> Click the <strong>Install icon</strong> in the address bar.</li>
-                        <li><span>3</span> Or click browser menu (⋮) &rarr; <strong>Save and Share</strong> &rarr;
-                            <strong>Install Attendix</strong>.</li>
-                        <li><span>4</span> Launch Attendix anytime from your desktop or Start Menu!</li>
-                    </ol>
-                </div>
-            </div>
-
-            <div class="install-actions">
-                <button class="btn btn-primary btn-block ripple" id="guideInstallNowBtn">
-                    <i class="fa-solid fa-download"></i> <span>Trigger App Install</span>
-                </button>
-                <button class="btn btn-outline btn-block ripple" id="closeInstallGuideBtn">
-                    <span>Got it</span>
-                </button>
-            </div>
-        </div>
-    </div>
 
     <div class="app-container">
         <!-- Navigation Header -->
@@ -466,7 +403,7 @@
                                 </div>
                                 <div class="advice-content">
                                     <h3 id="adviceTitle">Evaluating...</h3>
-                                    <p id="adviceMessage">Calculating attendance status and bunk tolerance...</p>
+                                    <p id="adviceText">Calculating attendance status and bunk tolerance...</p>
                                 </div>
                             </div>
                         </div>
@@ -611,11 +548,27 @@
         </main>
     </div>
 
+    <!-- Mobile Bottom Navigation Bar -->
+    <div class="mobile-bottom-nav glass-card" id="mobileBottomNav" style="display: none;">
+        <button class="mobile-nav-item active" id="mobileTabOverview">
+            <i class="fa-solid fa-chart-pie"></i>
+            <span>Overview</span>
+        </button>
+        <button class="mobile-nav-item" id="mobileTabAnalytics">
+            <i class="fa-solid fa-chart-column"></i>
+            <span>Analytics</span>
+        </button>
+        <button class="mobile-nav-item" id="mobileTabRefresh">
+            <i class="fa-solid fa-arrows-rotate"></i>
+            <span>Refresh</span>
+        </button>
+    </div>
+
     <!-- Toast Notification Container -->
     <div class="toast-container" id="toastContainer"></div>
 
     <!-- Custom JS -->
-    <script src="/static/app.js"></script>
+    <script src="app.js"></script>
 </body>
 
 </html>

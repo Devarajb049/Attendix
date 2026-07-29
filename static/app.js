@@ -35,7 +35,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const adviceIconWrap = document.getElementById('adviceIconWrap');
     const adviceIcon = document.getElementById('adviceIcon');
     const adviceTitle = document.getElementById('adviceTitle');
-    const adviceText = document.getElementById('adviceText');
+    const adviceText = document.getElementById('adviceText') || document.getElementById('adviceMessage');
 
     const totalAttendedCount = document.getElementById('totalAttendedCount');
     const totalConductedCount = document.getElementById('totalConductedCount');
@@ -60,6 +60,10 @@ document.addEventListener('DOMContentLoaded', () => {
     let barChartInstance = null;
     let doughnutChartInstance = null;
     let currentStudentName = localStorage.getItem('mits_student_name') || '';
+    if (currentStudentName && ['code', 'subject code', 'course code', 'student', 'name', 'student name', 'status', 'title'].includes(currentStudentName.trim().toLowerCase())) {
+        currentStudentName = '';
+        localStorage.removeItem('mits_student_name');
+    }
     let currentRegisterNumber = localStorage.getItem('mits_stu_id') ? localStorage.getItem('mits_stu_id').toUpperCase() : '';
     let currentLastLogin = localStorage.getItem('mits_last_login') || '';
 
@@ -199,14 +203,40 @@ document.addEventListener('DOMContentLoaded', () => {
             }, 3500);
         }
 
+        function getApiEndpoint() {
+            if (window.location.protocol === 'file:') {
+                return 'http://localhost:8080/api/attendance';
+            }
+            if ((window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') && window.location.port !== '8080' && window.location.port !== '') {
+                return `http://${window.location.hostname}:8080/api/attendance`;
+            }
+            return '/api/attendance';
+        }
+
         try {
-            const response = await fetch('/api/attendance', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({ username, password })
-            });
+            let apiEndpoint = getApiEndpoint();
+            let response;
+            try {
+                response = await fetch(apiEndpoint, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ username, password })
+                });
+            } catch (firstErr) {
+                if (apiEndpoint !== 'http://localhost:8080/api/attendance' && (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1' || window.location.protocol === 'file:')) {
+                    response = await fetch('http://localhost:8080/api/attendance', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify({ username, password })
+                    });
+                } else {
+                    throw firstErr;
+                }
+            }
 
             let result;
             try {
@@ -221,14 +251,19 @@ document.addEventListener('DOMContentLoaded', () => {
                     included: true
                 }));
                 currentRegisterNumber = username.toUpperCase();
-                currentStudentName = (result.student_name && result.student_name.trim()) ? result.student_name.trim() : '';
+                const rawName = (result.student_name && result.student_name.trim()) ? result.student_name.trim() : '';
+                currentStudentName = (rawName && !invalidNames.includes(rawName.toLowerCase())) ? rawName : '';
                 currentLastLogin = new Date().toLocaleString('en-US', { dateStyle: 'medium', timeStyle: 'short' });
 
 
                 // Cache data in localStorage for persistent session
                 if (rememberMeCheckbox.checked || localStorage.getItem('mits_stu_id')) {
                     localStorage.setItem('mits_attendance_cache', JSON.stringify(currentAttendanceData));
-                    localStorage.setItem('mits_student_name', currentStudentName);
+                    if (currentStudentName) {
+                        localStorage.setItem('mits_student_name', currentStudentName);
+                    } else {
+                        localStorage.removeItem('mits_student_name');
+                    }
                     localStorage.setItem('mits_last_login', currentLastLogin);
                 }
                 displayUsername.textContent = currentStudentName || currentRegisterNumber;
@@ -325,7 +360,9 @@ document.addEventListener('DOMContentLoaded', () => {
         const modalStatusBadge = document.getElementById('modalStatusBadge');
 
         const activeRegNo = currentRegisterNumber || (displayUsername ? displayUsername.textContent.trim() : 'Student');
-        const activeName = currentStudentName || activeRegNo;
+        const invalidNames = ['code', 'subject code', 'course code', 'student', 'name', 'student name', 'status', 'title'];
+        const isNameValid = currentStudentName && !invalidNames.includes(currentStudentName.trim().toLowerCase());
+        const activeName = isNameValid ? currentStudentName : activeRegNo;
         const activeLogin = currentLastLogin || 'Just now';
 
         if (profileBannerName) profileBannerName.textContent = activeName;
@@ -844,6 +881,14 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
+    const modalCopyReportBtn = document.getElementById('modalCopyReportBtn');
+    if (modalCopyReportBtn) {
+        modalCopyReportBtn.addEventListener('click', () => {
+            closeProfileModal();
+            copyReportToClipboard();
+        });
+    }
+
     if (modalLogoutBtn) {
         modalLogoutBtn.addEventListener('click', () => {
             closeProfileModal();
@@ -1004,10 +1049,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const loginInstallAppBtn = document.getElementById('loginInstallAppBtn');
     const modalInstallAppBtn = document.getElementById('modalInstallAppBtn');
 
-    const installGuideModal = document.getElementById('installGuideModal');
-    const closeInstallGuideModalBtn = document.getElementById('closeInstallGuideModalBtn');
-    const closeInstallGuideBtn = document.getElementById('closeInstallGuideBtn');
-    const guideInstallNowBtn = document.getElementById('guideInstallNowBtn');
+
 
     // Check if running as standalone app
     const isStandalone = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone;
@@ -1032,17 +1074,8 @@ document.addEventListener('DOMContentLoaded', () => {
             }
             deferredPrompt = null;
         } else {
-            // Open Install Guide Modal if browser prompt is unavailable (e.g. iOS Safari)
-            openInstallGuideModal();
+            showToast('Use your browser menu to install Attendix as an app.', 'info');
         }
-    }
-
-    function openInstallGuideModal() {
-        if (installGuideModal) installGuideModal.style.display = 'flex';
-    }
-
-    function closeInstallGuideModal() {
-        if (installGuideModal) installGuideModal.style.display = 'none';
     }
 
     function dismissTopNotification() {
@@ -1109,33 +1142,36 @@ document.addEventListener('DOMContentLoaded', () => {
     if (bannerInstallBtn) bannerInstallBtn.addEventListener('click', triggerAppInstall);
     if (loginInstallAppBtn) loginInstallAppBtn.addEventListener('click', triggerAppInstall);
     if (modalInstallAppBtn) modalInstallAppBtn.addEventListener('click', triggerAppInstall);
-    if (guideInstallNowBtn) guideInstallNowBtn.addEventListener('click', triggerAppInstall);
 
-    if (bannerHowToInstallBtn) bannerHowToInstallBtn.addEventListener('click', openInstallGuideModal);
-    if (closeInstallGuideModalBtn) closeInstallGuideModalBtn.addEventListener('click', closeInstallGuideModal);
-    if (closeInstallGuideBtn) closeInstallGuideBtn.addEventListener('click', closeInstallGuideModal);
-
-    // Guide Modal Tabs Switcher (Android / iOS / Desktop)
-    const guideTabItems = document.querySelectorAll('.guide-tab-item');
-    guideTabItems.forEach(tab => {
-        tab.addEventListener('click', () => {
-            guideTabItems.forEach(t => t.classList.remove('active'));
-            tab.classList.add('active');
-
-            const targetGuide = tab.dataset.guide;
-            const panels = {
-                android: document.getElementById('guideAndroid'),
-                ios: document.getElementById('guideIos'),
-                desktop: document.getElementById('guideDesktop')
-            };
-
-            Object.keys(panels).forEach(key => {
-                if (panels[key]) {
-                    panels[key].style.display = (key === targetGuide) ? 'block' : 'none';
-                }
-            });
+    if (installNowBtn) {
+        installNowBtn.addEventListener('click', () => {
+            if (installModal) installModal.style.display = 'none';
+            triggerAppInstall();
         });
-    });
+    }
+
+    if (installLaterBtn) {
+        installLaterBtn.addEventListener('click', () => {
+            if (installModal) installModal.style.display = 'none';
+        });
+    }
+
+    if (bannerHowToInstallBtn) {
+        bannerHowToInstallBtn.addEventListener('click', () => {
+            if (installModal) {
+                installModal.style.display = 'flex';
+            } else {
+                window.location.href = '/install';
+            }
+        });
+    }
+
+    if (installModal) {
+        installModal.addEventListener('click', (e) => {
+            if (e.target === installModal) installModal.style.display = 'none';
+        });
+    }
+
 
     // PWA Install Event Listener
     window.addEventListener('beforeinstallprompt', (e) => {

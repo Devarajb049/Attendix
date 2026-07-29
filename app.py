@@ -10,7 +10,7 @@ if sys.platform == "win32":
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
-from fastapi.responses import FileResponse, JSONResponse
+from fastapi.responses import FileResponse, JSONResponse, Response
 from typing import Optional, List
 from datetime import datetime
 from pydantic import BaseModel, Field
@@ -62,6 +62,13 @@ app.mount("/static", StaticFiles(directory=static_dir), name="static")
 class AttendanceRequest(BaseModel):
     username: str = Field(..., description="MITS IMS Student ID / Register Number")
     password: str = Field(..., description="MITS IMS Password")
+
+
+class ExportReportRequest(BaseModel):
+    student_name: Optional[str] = "Student"
+    register_number: Optional[str] = "N/A"
+    data: List[dict] = []
+    timestamp: Optional[str] = None
 
 
 
@@ -176,10 +183,38 @@ async def fetch_attendance(req: AttendanceRequest):
         return JSONResponse(status_code=500, content={"success": False, "error": f"Server error: {err_detail}"})
 
 
+@app.post("/api/export/pdf")
+async def export_pdf(req: ExportReportRequest):
+    try:
+        pdf_bytes = generate_pdf_report(req.student_name, req.register_number, req.data, req.timestamp)
+        filename = f"Attendance_Report_{req.register_number or 'Student'}.pdf"
+        return Response(
+            content=pdf_bytes,
+            media_type="application/pdf",
+            headers={"Content-Disposition": f"attachment; filename={filename}"}
+        )
+    except Exception as e:
+        logger.error(f"PDF export error: {e}")
+        return JSONResponse(status_code=500, content={"success": False, "error": f"Failed to generate PDF report: {str(e)}"})
 
 
+@app.post("/api/export/txt")
+async def export_txt(req: ExportReportRequest):
+    try:
+        txt_bytes = generate_txt_report(req.student_name, req.register_number, req.data, req.timestamp)
+        filename = f"Attendance_Report_{req.register_number or 'Student'}.txt"
+        return Response(
+            content=txt_bytes,
+            media_type="text/plain",
+            headers={"Content-Disposition": f"attachment; filename={filename}"}
+        )
+    except Exception as e:
+        logger.error(f"TXT export error: {e}")
+        return JSONResponse(status_code=500, content={"success": False, "error": f"Failed to generate TXT report: {str(e)}"})
 
 
+# Mount static directory at root / for direct asset access
+app.mount("/", StaticFiles(directory=static_dir, html=True), name="root_static")
 
 
 if __name__ == "__main__":

@@ -28,14 +28,19 @@ def extract_student_name(html_text):
         "INSTITUTE", "REGULAR", "DETAILS", "MARK", "TIME", "TABLE",
         "SOFTSKILLS", "APPTITUDE", "CLASSES ATTENDED", "TOTAL CONDUCTED",
         "ATTENDANCE %", "SAFE ZONE", "STUDENT", "REGISTER NUMBER", "JUST NOW",
-        "VIEW FULL PROFILE", "OVERALL PERC", "SUBJECTS", "ATTENDED"
+        "VIEW FULL PROFILE", "OVERALL PERC", "SUBJECTS", "ATTENDED",
+        "CODE", "SUBJECT CODE", "COURSE CODE", "TITLE", "NAME", "STUDENT NAME",
+        "STATUS", "ACTION", "TYPE", "PERC", "PERCENTAGE", "NUMBER", "REGISTER",
+        "ROLL", "NO", "ROLL NO", "SL.NO", "SERIAL NO", "SERIAL", "BRANCH",
+        "SECTION", "YEAR", "ACADEMIC YEAR", "DEPARTMENT", "FACULTY", "USERNAME",
+        "LOGIN", "VIEW", "PROFILE", "MITSIMS"
     }
 
     # 1. Header pattern: "STUDENT NAME | CHANGE PASSWORD | LOGOUT"
     m_header = re.search(r'([A-Za-z\s\.\']+?)\s*\|\s*(?:CHANGE\s+PASSWORD|LOGOUT)', html_text, re.IGNORECASE)
     if m_header:
         candidate = m_header.group(1).strip()
-        if len(candidate) >= 3 and not candidate.isdigit() and candidate.upper() not in excluded:
+        if len(candidate) >= 3 and not candidate.isdigit() and candidate.upper() not in excluded and all(w.upper() not in excluded for w in candidate.upper().split()):
             return candidate.title()
 
     # 2. ExtJS displayfield values matching <span style="...">...</span>
@@ -58,7 +63,7 @@ def extract_student_name(html_text):
         name_elem = soup.find(id=re.compile(r"studentName|StudentName|lblStudentName|spnStudentName", re.I))
         if name_elem:
             val = name_elem.get_text(strip=True)
-            if val and len(val) >= 2 and not val.isdigit() and val.upper() not in excluded:
+            if val and len(val) >= 2 and not val.isdigit() and val.upper() not in excluded and all(w.upper() not in excluded for w in val.upper().split()):
                 return val.title()
     except Exception as e:
         logger.debug(f"Soup parse error in extract_student_name: {e}")
@@ -140,6 +145,39 @@ def parse_mits_dashboard_html(html_text):
             else:
                 curr += 1
 
+    # Fallback to parsing HTML <tr> tags if ExtJS displayfields parsing returned empty
+    if not results and html_text:
+        try:
+            soup = BeautifulSoup(html_text, "html.parser")
+            rows = soup.find_all("tr")
+            for row in rows:
+                cells = [c.get_text(strip=True).replace('\xa0', ' ') for c in row.find_all(["td", "th"])]
+                if len(cells) >= 4:
+                    subject, attended, total, percentage = None, None, None, None
+                    if len(cells) >= 5 and cells[2].isdigit() and cells[3].isdigit():
+                        subject = cells[1]
+                        attended = cells[2]
+                        total = cells[3]
+                        percentage = cells[4].replace("%", "").strip()
+                    elif cells[1].isdigit() and cells[2].isdigit():
+                        subject = cells[0]
+                        attended = cells[1]
+                        total = cells[2]
+                        percentage = cells[3].replace("%", "").strip() if len(cells) >= 4 else "0.0"
+
+                    if subject and attended and total:
+                        clean_name = re.sub(r'[\r\n\t]+', ' ', subject).strip()
+                        exclude_keywords = ["SUBJECT CODE", "CLASSES ATTENDED", "TOTAL CONDUCTED", "ATTENDANCE %", "S.NO"]
+                        if clean_name and len(clean_name) > 1 and not any(kw in clean_name.upper() for kw in exclude_keywords):
+                            results.append({
+                                "subject": clean_name,
+                                "attended": attended,
+                                "total": total,
+                                "percentage": percentage or "0.0"
+                            })
+        except Exception as e:
+            logger.debug(f"Soup table parse fallback error: {e}")
+
     return results
 
 
@@ -170,11 +208,16 @@ def _get_attendance_http(username, password):
 
             try:
                 res_json = res_post.json()
-                if isinstance(res_json, dict) and res_json.get("status") == "fail":
-                    err_msg = res_json.get("message") or "Invalid Student ID or Password."
-                    return {"error": err_msg}
+                if isinstance(res_json, dict):
+                    if res_json.get("status") in ["fail", "error", "false"] or res_json.get("success") is False:
+                        err_msg = res_json.get("message") or res_json.get("msg") or res_json.get("error") or "Invalid Student ID or Password."
+                        return {"error": err_msg}
             except Exception:
                 pass
+
+            post_text_lower = res_post.text.lower()
+            if any(term in post_text_lower for term in ["invalid user", "invalid password", "password does not match", "user id or password", "authentication failed"]):
+                return {"error": "Invalid Student ID or Password."}
 
             # 3. GET Dashboard View Endpoint & Student Index
             dash_url = f"{base_url}/gemsonline-student/dashboard.action?actionType=view"
