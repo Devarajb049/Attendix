@@ -277,8 +277,10 @@ document.addEventListener('DOMContentLoaded', () => {
                 }
             }
         } catch (err) {
+            console.error('[Fetch Attendance Error]:', err);
             if (!silent) {
-                showAlert('Network error: Unable to connect to server. Please check your connection.');
+                const errDetail = (err && err.message) ? err.message : 'Unable to connect to server.';
+                showAlert(`Network error: ${errDetail}`);
                 showLoginState();
             }
         }
