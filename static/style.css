@@ -3,7 +3,8 @@
    ========================================================================== */
 
 /* 1. ROOT VARIABLES & THEME TOKENS */
-:root, [data-theme="dark"] {
+:root,
+[data-theme="dark"] {
     --bg-dark: #090d16;
     --bg-surface: #0f172a;
     --bg-card: rgba(17, 24, 39, 0.75);
@@ -217,8 +218,13 @@ body {
 }
 
 @keyframes floatSphere {
-    0% { transform: translate(0, 0) scale(1); }
-    100% { transform: translate(30px, -40px) scale(1.1); }
+    0% {
+        transform: translate(0, 0) scale(1);
+    }
+
+    100% {
+        transform: translate(30px, -40px) scale(1.1);
+    }
 }
 
 /* 4. CONTAINER & LAYOUT */
@@ -687,11 +693,15 @@ body {
 }
 
 @keyframes spin {
-    to { transform: rotate(360deg); }
+    to {
+        transform: rotate(360deg);
+    }
 }
 
 @keyframes spinReverse {
-    to { transform: rotate(-360deg); }
+    to {
+        transform: rotate(-360deg);
+    }
 }
 
 .loading-title {
@@ -899,7 +909,8 @@ body {
     color: var(--status-warning);
 }
 
-.advice-icon-wrap.alert, .advice-icon-wrap.danger {
+.advice-icon-wrap.alert,
+.advice-icon-wrap.danger {
     background: var(--status-danger-bg);
     color: var(--status-danger);
 }
@@ -1204,10 +1215,21 @@ body {
     font-weight: 800;
 }
 
-.subject-perc.success { color: var(--status-safe); }
-.subject-perc.warning { color: var(--status-blue); }
-.subject-perc.orange { color: var(--status-warning); }
-.subject-perc.danger { color: var(--status-danger); }
+.subject-perc.success {
+    color: var(--status-safe);
+}
+
+.subject-perc.warning {
+    color: var(--status-blue);
+}
+
+.subject-perc.orange {
+    color: var(--status-warning);
+}
+
+.subject-perc.danger {
+    color: var(--status-danger);
+}
 
 .subject-counts {
     font-size: 12px;
@@ -1228,10 +1250,21 @@ body {
     transition: width 0.6s ease;
 }
 
-.progress-bar-fill.success { background: var(--status-safe); }
-.progress-bar-fill.warning { background: var(--status-blue); }
-.progress-bar-fill.orange { background: var(--status-warning); }
-.progress-bar-fill.danger { background: var(--status-danger); }
+.progress-bar-fill.success {
+    background: var(--status-safe);
+}
+
+.progress-bar-fill.warning {
+    background: var(--status-blue);
+}
+
+.progress-bar-fill.orange {
+    background: var(--status-warning);
+}
+
+.progress-bar-fill.danger {
+    background: var(--status-danger);
+}
 
 .excluded-tag {
     font-size: 11px;
@@ -1285,10 +1318,21 @@ body {
     font-weight: 700;
 }
 
-.table-perc.success { color: var(--status-safe); }
-.table-perc.warning { color: var(--status-blue); }
-.table-perc.orange { color: var(--status-warning); }
-.table-perc.danger { color: var(--status-danger); }
+.table-perc.success {
+    color: var(--status-safe);
+}
+
+.table-perc.warning {
+    color: var(--status-blue);
+}
+
+.table-perc.orange {
+    color: var(--status-warning);
+}
+
+.table-perc.danger {
+    color: var(--status-danger);
+}
 
 .badge-count {
     padding: 3px 8px;
@@ -1337,32 +1381,57 @@ body {
 }
 
 @keyframes slideUp {
-    from { opacity: 0; transform: translateY(20px); }
-    to { opacity: 1; transform: translateY(0); }
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
 }
 
 @keyframes fadeIn {
-    from { opacity: 0; }
-    to { opacity: 1; }
+    from {
+        opacity: 0;
+    }
+
+    to {
+        opacity: 1;
+    }
 }
 
 .animate-fade-in {
     animation: fadeIn 0.4s ease-out;
 }
 
-.text-success { color: var(--status-safe) !important; }
-.text-primary { color: var(--primary) !important; }
-.text-danger { color: var(--status-danger) !important; }
-.text-accent { color: var(--secondary) !important; }
+.text-success {
+    color: var(--status-safe) !important;
+}
+
+.text-primary {
+    color: var(--primary) !important;
+}
+
+.text-danger {
+    color: var(--status-danger) !important;
+}
+
+.text-accent {
+    color: var(--secondary) !important;
+}
 
 /* 18. RESPONSIVE BREAKPOINTS & NAVBAR FLUIDITY */
 @media (max-width: 1280px) {
     .hide-mobile {
         display: none !important;
     }
+
     .nav-actions {
         gap: 6px;
     }
+
     .user-badge {
         padding: 5px 10px;
         font-size: 12px;
@@ -1373,9 +1442,11 @@ body {
     .charts-grid {
         grid-template-columns: 1fr;
     }
+
     .nav-tabs {
         padding: 3px;
     }
+
     .nav-tab-btn {
         padding: 6px 10px;
         font-size: 11px;
@@ -1383,6 +1454,7 @@ body {
 }
 
 @media (max-width: 840px) {
+
     .nav-tabs,
     #downloadPdfBtn,
     #copyReportBtn,
@@ -1390,16 +1462,20 @@ body {
     #pwaInstallHeaderBtn {
         display: none !important;
     }
+
     .navbar {
         padding: 10px 14px;
         justify-content: space-between;
     }
+
     .nav-actions {
         gap: 8px;
     }
+
     .user-badge span#displayUsername {
         display: none !important;
     }
+
     .user-badge {
         padding: 0;
         width: 34px;
@@ -1409,43 +1485,53 @@ body {
         align-items: center;
         justify-content: center;
     }
+
     .user-badge i {
         font-size: 16px;
     }
+
     .view-container {
         padding: 16px 16px 40px;
     }
+
     .controls-section {
         flex-direction: column;
         align-items: stretch;
         gap: 12px;
     }
+
     .search-box {
         width: 100%;
     }
+
     .control-actions {
         display: grid;
         grid-template-columns: 1fr auto;
         gap: 10px;
         width: 100%;
     }
+
     .sort-box {
         grid-column: 1 / 2;
         width: 100%;
     }
+
     .sort-select {
         width: 100%;
         max-width: 100% !important;
         padding: 8px 12px 8px 30px;
         font-size: 12px;
     }
+
     .sort-icon {
         left: 10px;
         font-size: 11px;
     }
+
     .view-toggle {
         grid-column: 2 / 3;
     }
+
     #selectAllBtn {
         grid-column: 1 / -1;
         width: 100%;
@@ -1464,19 +1550,23 @@ body {
         padding: 8px 12px;
         gap: 8px;
     }
+
     .brand-title {
         font-size: 17px;
     }
+
     .brand-logo {
         width: 34px;
         height: 34px;
         border-radius: 10px;
         padding: 4px;
     }
+
     .nav-actions .btn-sm {
         padding: 6px 8px;
         font-size: 11px;
     }
+
     .toggle-btn {
         padding: 6px 12px;
         font-size: 12px;
