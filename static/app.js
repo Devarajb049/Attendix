@@ -127,7 +127,7 @@ document.addEventListener('DOMContentLoaded', () => {
             studentIdInput.value = savedId;
             passwordInput.value = savedPass;
             rememberMeCheckbox.checked = true;
-            displayUsername.textContent = currentStudentName || savedId.toUpperCase();
+            if (displayUsername) displayUsername.textContent = currentStudentName || savedId.toUpperCase();
 
 
             // Load cached data instantly if available to stay on Dashboard
@@ -267,7 +267,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     }
                     localStorage.setItem('mits_last_login', currentLastLogin);
                 }
-                displayUsername.textContent = currentStudentName || currentRegisterNumber;
+                if (displayUsername) displayUsername.textContent = currentStudentName || currentRegisterNumber;
                 renderDashboard(currentAttendanceData);
                 showDashboardState();
             } else {
