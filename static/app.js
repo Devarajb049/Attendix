@@ -54,7 +54,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const themeToggleIcon = document.getElementById('themeToggleIcon');
 
     // State Variables
-    const INVALID_STUDENT_NAMES = ['code', 'subject code', 'course code', 'student', 'name', 'student name', 'status', 'title'];
+    const INVALID_STUDENT_NAMES = ['code', 'subject code', 'course code', 'student', 'name', 'student name', 'status', 'title', 'subject', 's.no', 'sl.no', 'sno', 'n/a', 'undefined', 'null', 'subject name', 'overall'];
     let currentAttendanceData = [];
     let currentViewMode = 'grid'; // 'grid' or 'table'
     let selectedTargetPerc = 75; // Default target percentage
@@ -1557,5 +1557,29 @@ document.addEventListener('DOMContentLoaded', () => {
             console.error('Clipboard Error:', err);
             showToast('Unable to copy to clipboard.', 'error');
         }
+    }
+
+    // 🔔 Global Toast Notification Function (Displayed at Top of Screen)
+    const toastContainer = document.getElementById('toastContainer');
+
+    function showToast(message, type = 'info', duration = 3500) {
+        if (!toastContainer) return;
+        const toast = document.createElement('div');
+        toast.className = `toast toast-${type === 'error' ? 'danger' : type}`;
+
+        let icon = 'fa-circle-info';
+        if (type === 'success') icon = 'fa-circle-check';
+        if (type === 'danger' || type === 'error') icon = 'fa-circle-exclamation';
+        if (type === 'warning') icon = 'fa-triangle-exclamation';
+
+        toast.innerHTML = `<i class="fa-solid ${icon}"></i> <span>${escapeHtml(message)}</span>`;
+        toastContainer.appendChild(toast);
+
+        setTimeout(() => {
+            toast.style.opacity = '0';
+            toast.style.transform = 'translateY(-10px)';
+            toast.style.transition = 'all 0.3s ease';
+            setTimeout(() => toast.remove(), 300);
+        }, duration);
     }
 });
