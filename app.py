@@ -74,6 +74,33 @@ class ExportReportRequest(BaseModel):
 
 
 
+@app.middleware("http")
+async def add_security_and_seo_headers(request, call_next):
+    response = await call_next(request)
+    response.headers["X-Content-Type-Options"] = "nosniff"
+    response.headers["X-Frame-Options"] = "SAMEORIGIN"
+    response.headers["X-XSS-Protection"] = "1; mode=block"
+    response.headers["Referrer-Policy"] = "strict-origin-when-cross-origin"
+    response.headers["Permissions-Policy"] = "camera=(), microphone=(), geolocation=()"
+    return response
+
+
+@app.get("/robots.txt", response_class=FileResponse)
+async def serve_robots():
+    robots_path = os.path.join(static_dir, "robots.txt")
+    if os.path.exists(robots_path):
+        return FileResponse(robots_path, media_type="text/plain")
+    return Response("User-agent: *\nAllow: /\n", media_type="text/plain")
+
+
+@app.get("/sitemap.xml", response_class=FileResponse)
+async def serve_sitemap():
+    sitemap_path = os.path.join(static_dir, "sitemap.xml")
+    if os.path.exists(sitemap_path):
+        return FileResponse(sitemap_path, media_type="application/xml")
+    return Response("<urlset xmlns='http://www.sitemaps.org/schemas/sitemap/0.9'></urlset>", media_type="application/xml")
+
+
 @app.get("/", response_class=FileResponse)
 async def serve_index():
     index_path = os.path.join(static_dir, "index.html")

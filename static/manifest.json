@@ -1,15 +1,14 @@
 {
-  "name": "Attendix Student Attendance Tracker",
+  "name": "MITS Attendance Tracer - Attendix",
   "short_name": "Attendix",
-  "description": "Track and calculate your student attendance, overall percentage, and target bunks with Attendix.",
-
+  "description": "Track, calculate, and analyze MITS student attendance with real-time scraping, target bunk advisors, and vector PDF reports.",
   "start_url": "/",
   "scope": "/",
   "display": "standalone",
   "orientation": "portrait",
-  "background_color": "#0f172a",
-  "theme_color": "#0f172a",
-  "categories": ["education", "utilities"],
+  "background_color": "#090d16",
+  "theme_color": "#090d16",
+  "categories": ["education", "utilities", "productivity"],
   "icons": [
     {
       "src": "/static/icons/icon-192.png",
@@ -28,7 +27,7 @@
     {
       "name": "Check Attendance",
       "short_name": "Attendance",
-      "description": "Quickly check your latest attendance records",
+      "description": "Quickly check your latest MITS attendance records",
       "url": "/",
       "icons": [{ "src": "/static/icons/icon-192.png", "sizes": "192x192" }]
     }

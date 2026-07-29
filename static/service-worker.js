@@ -1,15 +1,17 @@
-const CACHE_NAME = 'mits-ims-pwa-v9';
+const CACHE_NAME = 'mits-ims-pwa-v14';
 const ASSETS_TO_CACHE = [
   '/',
   '/static/index.html',
   '/static/style.css',
   '/static/app.js',
   '/static/manifest.json',
+  '/static/robots.txt',
+  '/static/sitemap.xml',
   '/static/offline.html',
   '/static/icons/icon-192.png',
   '/static/icons/icon-512.png',
   '/static/icons/apple-touch-icon.png',
-  'https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Outfit:wght@400;600;700;800&display=swap',
+  'https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Plus+Jakarta+Sans:wght@500;600;700;800&display=swap',
   'https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css'
 ];
 

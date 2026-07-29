@@ -1,0 +1,27 @@
+# Attendix / MITS Attendance Tracer Robots File
+# Allow search engines and AI crawlers for optimal discoverability and GEO
+
+User-agent: *
+Allow: /
+
+# AI & Generative Search Engine Crawlers (AEO / GEO)
+User-agent: GPTBot
+Allow: /
+
+User-agent: ChatGPT-User
+Allow: /
+
+User-agent: ClaudeBot
+Allow: /
+
+User-agent: PerplexityBot
+Allow: /
+
+User-agent: Google-Extended
+Allow: /
+
+User-agent: Applebot-Extended
+Allow: /
+
+# XML Sitemap Location
+Sitemap: https://attendix-dev.vercel.app/sitemap.xml

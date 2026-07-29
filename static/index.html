@@ -4,9 +4,38 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Attendix - Premium Student Attendance Tracker</title>
+    <title>MITS Attendance Tracer | Real-Time Student Attendance Tracker & Analytics</title>
     <meta name="description"
-        content="Track and calculate your student attendance, overall percentage, target bunks, and subject analytics with Attendix.">
+        content="Track your MITS attendance with real-time analytics, subject-wise percentage calculations, target bunk calculators, PDF exports, and smart attendance monitoring.">
+    <meta name="keywords"
+        content="MITS Attendance Tracer, MITS IMS Attendance, Student Attendance Calculator, Bunk Calculator, Attendance Analytics, MITS Student Portal, PDF Attendance Report, Attendix">
+    <meta name="robots" content="index, follow, max-snippet:-1, max-image-preview:large, max-video-preview:-1">
+    <link rel="canonical" href="https://attendix-dev.vercel.app/">
+
+    <!-- Resource Hints & DNS Prefetch for Fast Core Web Vitals -->
+    <link rel="dns-prefetch" href="https://fonts.googleapis.com">
+    <link rel="dns-prefetch" href="https://fonts.gstatic.com">
+    <link rel="dns-prefetch" href="https://cdnjs.cloudflare.com">
+    <link rel="dns-prefetch" href="https://cdn.jsdelivr.net">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+
+    <!-- Open Graph / Facebook / LinkedIn Meta Tags -->
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://attendix-dev.vercel.app/">
+    <meta property="og:title" content="MITS Attendance Tracer | Real-Time Student Attendance Tracker & Analytics">
+    <meta property="og:description"
+        content="Instant MITS student attendance scraping, percentage calculations, target bunk advisor, and vector PDF reports.">
+    <meta property="og:image" content="https://attendix-dev.vercel.app/static/logo.png">
+    <meta property="og:site_name" content="Attendix - MITS Attendance Tracer">
+
+    <!-- Twitter Card Meta Tags -->
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="MITS Attendance Tracer | Student Attendance Calculator & Reports">
+    <meta name="twitter:description"
+        content="Real-time attendance calculations, subject analytics, target bunk advisors, and vector PDF reports for MITS students.">
+    <meta name="twitter:image" content="https://attendix-dev.vercel.app/static/logo.png">
+
     <!-- PWA Configuration Meta Tags -->
     <link rel="manifest" href="manifest.json">
     <meta name="theme-color" content="#090d16">
@@ -17,8 +46,6 @@
     <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
 
     <!-- Google Fonts: Inter & Plus Jakarta Sans -->
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link
         href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Plus+Jakarta+Sans:wght@500;600;700;800&display=swap"
         rel="stylesheet">
@@ -31,6 +58,120 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.31/jspdf.plugin.autotable.min.js"></script>
     <!-- Custom Modern CSS -->
     <link rel="stylesheet" href="style.css">
+
+    <!-- JSON-LD Structured Data for AEO & GEO (SoftwareApplication, WebApplication, Organization, WebSite, FAQPage, BreadcrumbList) -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@graph": [
+        {
+          "@type": ["SoftwareApplication", "WebApplication"],
+          "@id": "https://attendix-dev.vercel.app/#webapp",
+          "url": "https://attendix-dev.vercel.app/",
+          "name": "MITS Attendance Tracer - Attendix",
+          "applicationCategory": "EducationalApplication",
+          "operatingSystem": "All (Web, Android, iOS, Windows, macOS)",
+          "offers": {
+            "@type": "Offer",
+            "price": "0",
+            "priceCurrency": "INR"
+          },
+          "description": "Attendix / MITS Attendance Tracer allows MITS students to scrape real-time IMS attendance data, view subject analytics, calculate target bunk tolerances, and download vector PDF reports.",
+          "featureList": [
+            "Real-Time MITS IMS Attendance Scraping",
+            "Overall Percentage & Bunk Target Advisor (75%, 80%, 85%, 90%)",
+            "Interactive Bar Charts & Doughnut Risk Distribution",
+            "Vector PDF Report & Text Summary Export",
+            "PWA Offline Caching & Installation"
+          ]
+        },
+        {
+          "@type": "Organization",
+          "@id": "https://attendix-dev.vercel.app/#organization",
+          "name": "MITS Attendance Tracer",
+          "url": "https://attendix-dev.vercel.app/",
+          "logo": "https://attendix-dev.vercel.app/static/logo.png"
+        },
+        {
+          "@type": "WebSite",
+          "@id": "https://attendix-dev.vercel.app/#website",
+          "url": "https://attendix-dev.vercel.app/",
+          "name": "MITS Attendance Tracer",
+          "publisher": {
+            "@id": "https://attendix-dev.vercel.app/#organization"
+          }
+        },
+        {
+          "@type": "BreadcrumbList",
+          "@id": "https://attendix-dev.vercel.app/#breadcrumb",
+          "itemListElement": [
+            {
+              "@type": "ListItem",
+              "position": 1,
+              "name": "Home",
+              "item": "https://attendix-dev.vercel.app/"
+            },
+            {
+              "@type": "ListItem",
+              "position": 2,
+              "name": "Dashboard",
+              "item": "https://attendix-dev.vercel.app/#overview"
+            },
+            {
+              "@type": "ListItem",
+              "position": 3,
+              "name": "Analytics",
+              "item": "https://attendix-dev.vercel.app/#analytics"
+            },
+            {
+              "@type": "ListItem",
+              "position": 4,
+              "name": "Subjects",
+              "item": "https://attendix-dev.vercel.app/#subjects"
+            }
+          ]
+        },
+        {
+          "@type": "FAQPage",
+          "@id": "https://attendix-dev.vercel.app/#faq",
+          "mainEntity": [
+            {
+              "@type": "Question",
+              "name": "What is MITS Attendance Tracer?",
+              "acceptedAnswer": {
+                "@type": "Answer",
+                "text": "MITS Attendance Tracer (Attendix) is a fast, web-based attendance calculator and tracker specifically built for MITS college students to monitor real-time attendance, analyze subject breakdown, calculate bunk tolerances, and download PDF reports."
+              }
+            },
+            {
+              "@type": "Question",
+              "name": "How does MITS Attendance Tracer calculate bunk tolerance?",
+              "acceptedAnswer": {
+                "@type": "Answer",
+                "text": "The app evaluates your current total attended classes and total conducted classes against your chosen target percentage (75%, 80%, 85%, or 90%) to calculate exactly how many upcoming classes you can skip or must attend consecutively."
+              }
+            },
+            {
+              "@type": "Question",
+              "name": "Are student credentials stored on external servers?",
+              "acceptedAnswer": {
+                "@type": "Answer",
+                "text": "No. Credentials are sent securely directly to official MITS IMS servers to scrape attendance records and are never saved or stored in third-party databases."
+              }
+            },
+            {
+              "@type": "Question",
+              "name": "How do students download attendance PDF reports?",
+              "acceptedAnswer": {
+                "@type": "Answer",
+                "text": "Students can click the PDF Report button on the dashboard or inside the student profile modal to generate and download a clean vector PDF report."
+              }
+            }
+          ]
+        }
+      ]
+    }
+    </script>
 </head>
 
 <body>
@@ -117,6 +258,11 @@
                 <button class="btn btn-danger btn-block ripple" id="modalLogoutBtn">
                     <i class="fa-solid fa-right-from-bracket"></i> <span>Logout Session</span>
                 </button>
+            </div>
+            <div class="profile-modal-footer" style="margin-top: 16px; text-align: center; border-top: 1px solid var(--border-light); padding-top: 12px;">
+                <p style="font-size: 0.8rem; opacity: 0.85; margin: 0;">
+                    Crafted with ❤️ by <a href="https://bhojanapudevaraj.dev/" target="_blank" rel="noopener noreferrer" style="color: var(--primary); font-weight: 600; text-decoration: underline;">Bhojanapu Deva Raj</a>
+                </p>
             </div>
         </div>
     </div>
@@ -238,20 +384,9 @@
                 <div class="card-footer">
                     <p><i class="fa-solid fa-shield-halved text-success"></i> Credentials are sent securely directly to
                         the official MITS IMS server and never stored on external databases.</p>
-                </div>
-
-                <!-- Login App Install Prompt Banner -->
-                <div class="login-app-prompt glass-card animate-fade-in" id="loginAppPrompt" style="margin-top: 16px;">
-                    <div class="login-app-icon shadow-glow">
-                        <i class="fa-solid fa-mobile-screen-button"></i>
-                    </div>
-                    <div class="login-app-text">
-                        <strong>Install Attendix Mobile App</strong>
-                        <span>Add to Home Screen for instant 1-tap attendance tracking</span>
-                    </div>
-                    <button class="btn btn-outline btn-sm ripple header-action-btn" id="loginInstallAppBtn">
-                        <i class="fa-solid fa-download"></i> <span>Install</span>
-                    </button>
+                    <p class="portfolio-credit" style="margin-top: 10px; font-size: 0.82rem; opacity: 0.9;">
+                        Crafted with ❤️ by <a href="https://bhojanapudevaraj.dev/" target="_blank" rel="noopener noreferrer" style="color: var(--primary); font-weight: 600; text-decoration: underline;">Bhojanapu Deva Raj</a>
+                    </p>
                 </div>
             </div>
         </main>
@@ -495,6 +630,10 @@
         <button class="mobile-nav-item" id="mobileTabAnalytics">
             <i class="fa-solid fa-chart-column"></i>
             <span>Analytics</span>
+        </button>
+        <button class="mobile-nav-item" id="mobileTabSubjects">
+            <i class="fa-solid fa-layer-group"></i>
+            <span>Subjects</span>
         </button>
         <button class="mobile-nav-item" id="mobileTabProfile">
             <i class="fa-solid fa-user-circle"></i>

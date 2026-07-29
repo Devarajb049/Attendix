@@ -158,6 +158,20 @@ body {
     transition: background-color 0.3s ease, color 0.3s ease;
 }
 
+/* WCAG 2.2 AA COMPLIANT ACCESSIBILITY FOCUS INDICATORS */
+:focus-visible {
+    outline: 3px solid var(--primary) !important;
+    outline-offset: 2px !important;
+}
+
+button:focus-visible,
+a:focus-visible,
+input:focus-visible,
+select:focus-visible {
+    outline: 3px solid var(--primary) !important;
+    outline-offset: 2px !important;
+}
+
 /* SLEEK SCROLLBAR */
 ::-webkit-scrollbar {
     width: 7px;

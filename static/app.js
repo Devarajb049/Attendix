@@ -810,9 +810,14 @@ document.addEventListener('DOMContentLoaded', () => {
 
     const mobileTabOverview = document.getElementById('mobileTabOverview');
     const mobileTabAnalytics = document.getElementById('mobileTabAnalytics');
+    const mobileTabSubjects = document.getElementById('mobileTabSubjects');
     const mobileTabProfile = document.getElementById('mobileTabProfile');
 
-    function setActiveTab(tabName) {
+    let currentActiveTab = 'overview';
+    let isManualScrolling = false;
+
+    function updateTabUI(tabName) {
+        currentActiveTab = tabName;
         // Desktop Tabs Active State
         document.querySelectorAll('.nav-tab-btn').forEach(btn => btn.classList.remove('active'));
         if (tabName === 'overview' && tabOverviewBtn) tabOverviewBtn.classList.add('active');
@@ -823,20 +828,57 @@ document.addEventListener('DOMContentLoaded', () => {
         document.querySelectorAll('.mobile-nav-item').forEach(item => item.classList.remove('active'));
         if (tabName === 'overview' && mobileTabOverview) mobileTabOverview.classList.add('active');
         if (tabName === 'analytics' && mobileTabAnalytics) mobileTabAnalytics.classList.add('active');
+        if (tabName === 'subjects' && mobileTabSubjects) mobileTabSubjects.classList.add('active');
         if (tabName === 'profile' && mobileTabProfile) mobileTabProfile.classList.add('active');
+    }
 
-        // Smooth Scroll to Target Section
-        if (tabName === 'overview') {
-            const el = document.getElementById('summarySection') || dashboardView;
-            if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
-        } else if (tabName === 'analytics') {
-            const el = document.getElementById('chartsSection');
-            if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
-        } else if (tabName === 'subjects') {
-            const el = document.getElementById('controlsSection');
-            if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    function setActiveTab(tabName, scroll = true) {
+        updateTabUI(tabName);
+
+        if (scroll && tabName !== 'profile') {
+            isManualScrolling = true;
+            let el = null;
+            if (tabName === 'overview') el = document.getElementById('summarySection') || dashboardView;
+            else if (tabName === 'analytics') el = document.getElementById('chartsSection');
+            else if (tabName === 'subjects') el = document.getElementById('controlsSection');
+
+            if (el) {
+                el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                setTimeout(() => { isManualScrolling = false; }, 800);
+            } else {
+                isManualScrolling = false;
+            }
         }
     }
+
+    // ScrollSpy: Automatically update active tab based on scroll position
+    function getScrollSection() {
+        const chartsEl = document.getElementById('chartsSection');
+        const controlsEl = document.getElementById('controlsSection');
+
+        const scrollPos = window.scrollY + 180;
+
+        if (controlsEl && scrollPos >= controlsEl.offsetTop) {
+            return 'subjects';
+        }
+        if (chartsEl && scrollPos >= chartsEl.offsetTop) {
+            return 'analytics';
+        }
+        return 'overview';
+    }
+
+    function handleScrollSpy() {
+        if (isManualScrolling) return;
+        if (dashboardView && dashboardView.style.display === 'none') return;
+        if (profileModal && profileModal.style.display === 'flex') return;
+
+        const activeSection = getScrollSection();
+        if (currentActiveTab !== activeSection && currentActiveTab !== 'profile') {
+            updateTabUI(activeSection);
+        }
+    }
+
+    window.addEventListener('scroll', handleScrollSpy, { passive: true });
 
     if (tabOverviewBtn) tabOverviewBtn.addEventListener('click', () => setActiveTab('overview'));
     if (tabAnalyticsBtn) tabAnalyticsBtn.addEventListener('click', () => setActiveTab('analytics'));
@@ -844,10 +886,21 @@ document.addEventListener('DOMContentLoaded', () => {
 
     if (mobileTabOverview) mobileTabOverview.addEventListener('click', () => setActiveTab('overview'));
     if (mobileTabAnalytics) mobileTabAnalytics.addEventListener('click', () => setActiveTab('analytics'));
+    if (mobileTabSubjects) mobileTabSubjects.addEventListener('click', () => setActiveTab('subjects'));
     if (mobileTabProfile) mobileTabProfile.addEventListener('click', () => {
-        setActiveTab('profile');
+        setActiveTab('profile', false);
         openProfileModal();
     });
+
+    // Quick stats click shortcut to scroll directly to all subjects
+    const modalTotalCourses = document.getElementById('modalTotalCourses');
+    if (modalTotalCourses) {
+        modalTotalCourses.style.cursor = 'pointer';
+        modalTotalCourses.addEventListener('click', () => {
+            closeProfileModal();
+            setActiveTab('subjects');
+        });
+    }
 
     // -------------------------------------------------------------
     // 👤 STUDENT PROFILE MODAL HANDLERS
@@ -866,6 +919,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
     function closeProfileModal() {
         if (profileModal) profileModal.style.display = 'none';
+        // Auto restore active tab based on currently visible open screen
+        const visibleSection = getScrollSection();
+        updateTabUI(visibleSection);
     }
 
     if (displayUserBadge) {
