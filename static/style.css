@@ -107,10 +107,15 @@
     color: #ffffff !important;
 }
 
-[data-theme="light"] .progress-ring-container,
 [data-theme="light"] .badge-count {
     background: rgba(99, 102, 241, 0.06) !important;
     border-color: rgba(99, 102, 241, 0.15) !important;
+}
+
+[data-theme="light"] .progress-ring-container {
+    background: transparent !important;
+    border: none !important;
+    box-shadow: none !important;
 }
 
 [data-theme="light"] .student-avatar-badge,
