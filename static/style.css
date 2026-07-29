@@ -76,6 +76,59 @@
     --shadow-glow: 0 0 20px rgba(79, 70, 229, 0.12);
 }
 
+/* LIGHT MODE CONTAINER & UI OVERRIDES */
+[data-theme="light"] .nav-tabs,
+[data-theme="light"] .target-selector,
+[data-theme="light"] .sort-box,
+[data-theme="light"] .profile-stats-grid,
+[data-theme="light"] .student-details-pills .profile-pill {
+    background: rgba(99, 102, 241, 0.08) !important;
+    border-color: rgba(99, 102, 241, 0.18) !important;
+}
+
+[data-theme="light"] .nav-tab-btn,
+[data-theme="light"] .target-btn {
+    color: var(--text-secondary);
+}
+
+[data-theme="light"] .nav-tab-btn:hover,
+[data-theme="light"] .target-btn:hover {
+    color: var(--primary);
+}
+
+[data-theme="light"] .nav-tab-btn.active,
+[data-theme="light"] .target-btn.active {
+    background: var(--primary) !important;
+    color: #ffffff !important;
+}
+
+[data-theme="light"] .progress-ring-container,
+[data-theme="light"] .badge-count {
+    background: rgba(99, 102, 241, 0.06) !important;
+    border-color: rgba(99, 102, 241, 0.15) !important;
+}
+
+[data-theme="light"] .student-avatar-badge,
+[data-theme="light"] .profile-avatar-wrap {
+    background: linear-gradient(135deg, rgba(99, 102, 241, 0.12), rgba(56, 189, 248, 0.12)) !important;
+    border-color: rgba(99, 102, 241, 0.25) !important;
+}
+
+[data-theme="light"] .mobile-bottom-nav {
+    background: rgba(255, 255, 255, 0.92) !important;
+    border-color: rgba(226, 232, 240, 0.95) !important;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08), 0 0 15px rgba(99, 102, 241, 0.12) !important;
+}
+
+[data-theme="light"] .mobile-nav-item {
+    color: var(--text-secondary);
+}
+
+[data-theme="light"] .mobile-nav-item.active {
+    background: var(--primary) !important;
+    color: #ffffff !important;
+}
+
 /* 2. BASE & RESET */
 * {
     box-sizing: border-box;
@@ -833,9 +886,20 @@ body {
     justify-content: center;
     font-size: 24px;
     flex-shrink: 0;
+    transition: var(--transition);
 }
 
-.advice-icon-wrap.alert {
+.advice-icon-wrap.safe {
+    background: var(--status-safe-bg);
+    color: var(--status-safe);
+}
+
+.advice-icon-wrap.warning {
+    background: var(--status-warning-bg);
+    color: var(--status-warning);
+}
+
+.advice-icon-wrap.alert, .advice-icon-wrap.danger {
     background: var(--status-danger-bg);
     color: var(--status-danger);
 }

@@ -329,18 +329,23 @@ document.addEventListener('DOMContentLoaded', () => {
 
         // 2. Set Overall Badge & Progress Ring
         const percVal = parseFloat(overallPerc);
-        setOverallRingProgress(percVal);
 
+        let statusStrokeColor = '#10b981';
         if (percVal >= selectedTargetPerc) {
             overallBadge.textContent = 'Safe Zone';
             overallBadge.className = 'status-badge success';
+            statusStrokeColor = '#10b981';
         } else if (percVal >= selectedTargetPerc - 5) {
             overallBadge.textContent = 'Borderline';
             overallBadge.className = 'status-badge warning';
+            statusStrokeColor = '#f59e0b';
         } else {
             overallBadge.textContent = 'Shortage';
             overallBadge.className = 'status-badge danger';
+            statusStrokeColor = '#ef4444';
         }
+
+        setOverallRingProgress(percVal, statusStrokeColor);
 
         // 3. Bunk / Target Attendance Advice Calculator
         calculateBunkAdvice(totalAttended, totalConducted, percVal);
@@ -417,12 +422,17 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // Set SVG Circular Progress Ring
-    function setOverallRingProgress(percent) {
+    function setOverallRingProgress(percent, color = null) {
         if (!overallRing) return;
         const radius = overallRing.r.baseVal.value; // ~44
         const circumference = 2 * Math.PI * radius; // ~276.4
         const offset = circumference - (percent / 100) * circumference;
         overallRing.style.strokeDashoffset = Math.max(0, offset);
+        if (color) {
+            overallRing.style.stroke = color;
+        } else {
+            overallRing.style.stroke = 'url(#gradientRing)';
+        }
     }
 
     // Dynamic Bunk / Attendance Advice Calculator Logic
@@ -430,8 +440,8 @@ document.addEventListener('DOMContentLoaded', () => {
         if (total === 0) {
             adviceTitle.textContent = 'No Data';
             adviceText.textContent = 'No active subjects selected for calculation.';
-            adviceIconWrap.className = 'advice-icon-wrap';
-            adviceIcon.className = 'fa-solid fa-circle-question';
+            if (adviceIconWrap) adviceIconWrap.className = 'advice-icon-wrap';
+            if (adviceIcon) adviceIcon.className = 'fa-solid fa-circle-question';
             return;
         }
 
@@ -442,20 +452,25 @@ document.addEventListener('DOMContentLoaded', () => {
             if (canBunk > 0) {
                 adviceTitle.textContent = `Can Skip ${canBunk} ${canBunk === 1 ? 'Class' : 'Classes'}`;
                 adviceText.textContent = `Selected Aggregate: ${overallPerc}%. You can skip ${canBunk} upcoming ${canBunk === 1 ? 'class' : 'classes'} and maintain >= ${selectedTargetPerc}%.`;
-                adviceIconWrap.className = 'advice-icon-wrap safe';
-                adviceIcon.className = 'fa-solid fa-shield-check';
+                if (adviceIconWrap) adviceIconWrap.className = 'advice-icon-wrap safe';
+                if (adviceIcon) adviceIcon.className = 'fa-solid fa-shield-halved';
             } else {
                 adviceTitle.textContent = `On Target (${selectedTargetPerc}%)`;
                 adviceText.textContent = `Selected Aggregate: ${overallPerc}%. You are right at the ${selectedTargetPerc}% threshold. Do not miss classes!`;
-                adviceIconWrap.className = 'advice-icon-wrap safe';
-                adviceIcon.className = 'fa-solid fa-circle-check';
+                if (adviceIconWrap) adviceIconWrap.className = 'advice-icon-wrap safe';
+                if (adviceIcon) adviceIcon.className = 'fa-solid fa-circle-check';
             }
         } else {
             const mustAttend = Math.ceil((targetRatio * total - attended) / (1 - targetRatio));
             adviceTitle.textContent = `Need ${mustAttend} ${mustAttend === 1 ? 'Class' : 'Classes'}`;
             adviceText.textContent = `Selected Aggregate: ${overallPerc}%. You must attend the next ${mustAttend} consecutive ${mustAttend === 1 ? 'class' : 'classes'} to reach ${selectedTargetPerc}%.`;
-            adviceIconWrap.className = 'advice-icon-wrap alert';
-            adviceIcon.className = 'fa-solid fa-triangle-exclamation';
+            if (overallPerc >= selectedTargetPerc - 5) {
+                if (adviceIconWrap) adviceIconWrap.className = 'advice-icon-wrap warning';
+                if (adviceIcon) adviceIcon.className = 'fa-solid fa-triangle-exclamation';
+            } else {
+                if (adviceIconWrap) adviceIconWrap.className = 'advice-icon-wrap alert';
+                if (adviceIcon) adviceIcon.className = 'fa-solid fa-circle-exclamation';
+            }
         }
     }
 
