@@ -810,7 +810,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     const mobileTabOverview = document.getElementById('mobileTabOverview');
     const mobileTabAnalytics = document.getElementById('mobileTabAnalytics');
-    const mobileTabRefresh = document.getElementById('mobileTabRefresh');
+    const mobileTabProfile = document.getElementById('mobileTabProfile');
 
     function setActiveTab(tabName) {
         // Desktop Tabs Active State
@@ -823,6 +823,7 @@ document.addEventListener('DOMContentLoaded', () => {
         document.querySelectorAll('.mobile-nav-item').forEach(item => item.classList.remove('active'));
         if (tabName === 'overview' && mobileTabOverview) mobileTabOverview.classList.add('active');
         if (tabName === 'analytics' && mobileTabAnalytics) mobileTabAnalytics.classList.add('active');
+        if (tabName === 'profile' && mobileTabProfile) mobileTabProfile.classList.add('active');
 
         // Smooth Scroll to Target Section
         if (tabName === 'overview') {
@@ -843,6 +844,10 @@ document.addEventListener('DOMContentLoaded', () => {
 
     if (mobileTabOverview) mobileTabOverview.addEventListener('click', () => setActiveTab('overview'));
     if (mobileTabAnalytics) mobileTabAnalytics.addEventListener('click', () => setActiveTab('analytics'));
+    if (mobileTabProfile) mobileTabProfile.addEventListener('click', () => {
+        setActiveTab('profile');
+        openProfileModal();
+    });
 
     // -------------------------------------------------------------
     // 👤 STUDENT PROFILE MODAL HANDLERS
@@ -924,14 +929,10 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    // Mobile Bottom Tab Refresh Handler
-    if (mobileTabRefresh) {
-        mobileTabRefresh.addEventListener('click', () => {
-            const username = studentIdInput.value.trim();
-            const password = passwordInput.value.trim();
-            if (username && password) {
-                fetchAttendance(username, password);
-            }
+    // Mobile Bottom Tab Profile Handler
+    if (mobileTabProfile) {
+        mobileTabProfile.addEventListener('click', () => {
+            openProfileModal();
         });
     }
 

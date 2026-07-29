@@ -1462,7 +1462,6 @@ body {
     .nav-tabs,
     #downloadPdfBtn,
     #copyReportBtn,
-    #logoutBtn,
     #pwaInstallHeaderBtn {
         display: none !important;
     }
