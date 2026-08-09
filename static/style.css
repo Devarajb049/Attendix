@@ -2405,6 +2405,12 @@ select:focus-visible {
     transform: scale(1.1);
 }
 
+@media (max-width: 768px) {
+    .view-container, #subjectsTab, .subjects-grid {
+        padding-bottom: 110px !important;
+    }
+}
+
 @media (min-width: 769px) {
     .mobile-bottom-nav {
         display: none !important;
