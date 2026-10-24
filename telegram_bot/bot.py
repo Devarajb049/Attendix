@@ -1010,6 +1010,28 @@ def build_application(token: Optional[str] = None) -> Application:
 
 async def main() -> None:
     """Entrypoint when running bot directly."""
+    # 1. Start lightweight health server immediately for Render Free Web Service
+    port = int(os.environ.get("PORT", 0))
+    health_server = None
+    if port:
+        async def handle_ping(reader, writer):
+            try:
+                await reader.read(1024)
+                response = b"HTTP/1.1 200 OK\r\nContent-Type: text/plain\r\nContent-Length: 17\r\n\r\nAttendix Bot OK\r\n"
+                writer.write(response)
+                await writer.drain()
+            except Exception:
+                pass
+            finally:
+                writer.close()
+                await writer.wait_closed()
+
+        try:
+            health_server = await asyncio.start_server(handle_ping, "0.0.0.0", port)
+            logger.info(f"Render web service health check active on port {port}")
+        except Exception as e:
+            logger.warning(f"Could not bind health server to port {port}: {e}")
+
     await init_db()
     if not TELEGRAM_BOT_TOKEN:
         print("ERROR: TELEGRAM_BOT_TOKEN is not set in environment or .env file.")
@@ -1050,28 +1072,6 @@ async def main() -> None:
         )
     except Exception as e:
         logger.warning(f"Notice setting bot commands/descriptions: {e}")
-
-    # Start lightweight health server for Render Free Web Service if PORT is set
-    port = int(os.environ.get("PORT", 0))
-    health_server = None
-    if port:
-        async def handle_ping(reader, writer):
-            try:
-                await reader.read(1024)
-                response = b"HTTP/1.1 200 OK\r\nContent-Type: text/plain\r\nContent-Length: 17\r\n\r\nAttendix Bot OK\r\n"
-                writer.write(response)
-                await writer.drain()
-            except Exception:
-                pass
-            finally:
-                writer.close()
-                await writer.wait_closed()
-
-        try:
-            health_server = await asyncio.start_server(handle_ping, "0.0.0.0", port)
-            logger.info(f"Render web service health check active on port {port}")
-        except Exception as e:
-            logger.warning(f"Could not bind health server to port {port}: {e}")
 
     await app.updater.start_polling(drop_pending_updates=True)
 
