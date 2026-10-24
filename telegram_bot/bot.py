@@ -204,12 +204,17 @@ async def start_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> N
     telegram_id = update.effective_user.id
     user = await get_user(telegram_id)
 
+    # Handle deep link from group chats: /start login
+    if context.args and context.args[0] == "login" and not user:
+        await login_start(update, context)
+        return
+
     if user:
         roll = user.get("roll_number", "")
         clean_name = clean_student_name(user.get("student_name"))
-        greeting = f"{roll} ({clean_name})" if clean_name else roll
+        greeting = f"{clean_name} ({roll})" if clean_name else roll
         welcome_text = (
-            f"👋 <b>Welcome, {html.escape(greeting)}!</b>\n\n"
+            f"👋 <b>Welcome back, {html.escape(greeting)}!</b>\n\n"
             f"🎓 <b>Linked Roll Number:</b> <code>{html.escape(roll)}</code>\n"
             f"🎯 <b>Default Target:</b> {user.get('default_target', 75.0):g}%\n\n"
             f"Choose an option below:"
@@ -223,6 +228,7 @@ async def start_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> N
         text = (
             "👋 <b>Welcome to Attendix</b>\n"
             "Your MITS attendance, simplified.\n\n"
+            "Attendix is built for <b>all MITS students</b> across all branches and academic years. "
             "Connect your MITS IMS account to instantly view verified attendance, "
             "track course attendance percentages, and calculate how many classes you can safely bunk.\n\n"
             "👨‍💻 <b>Developer:</b> Bhojanapu Deva Raj (@Devarajb049)"
@@ -448,29 +454,117 @@ async def delete_data_command(update: Update, context: ContextTypes.DEFAULT_TYPE
 # CONVERSATION HANDLER: LOGIN
 # ==========================================
 
+async def _execute_auth_and_respond(
+    update: Update,
+    context: ContextTypes.DEFAULT_TYPE,
+    roll: str,
+    password: str,
+    status_msg
+) -> int:
+    """Authenticates candidate credentials and replies with personalized confirmation."""
+    telegram_id = update.effective_user.id
+    auth_result = await authenticate_and_link(
+        telegram_id=telegram_id,
+        roll_number=roll,
+        password=password
+    )
+
+    if auth_result.get("success"):
+        clean_name = clean_student_name(auth_result.get("student_name"))
+        greeting = f"{clean_name} ({roll})" if clean_name else roll
+        await status_msg.edit_text(
+            f"🎉 <b>Authentication Successful!</b>\n\n"
+            f"Welcome, <b>{html.escape(greeting)}</b>! Your MITS IMS account has been linked to your Telegram profile.\n\n"
+            f"You can now check your verified attendance, course metrics, and bunk calculations anytime.",
+            reply_markup=get_main_menu_keyboard(),
+            parse_mode=ParseMode.HTML
+        )
+    else:
+        err = auth_result.get("error", "Invalid credentials or portal unreachable.")
+        await status_msg.edit_text(
+            f"❌ <b>Authentication Failed</b>\n\n"
+            f"Reason: <i>{html.escape(str(err))}</i>\n\n"
+            f"Please verify your credentials and try again:\n"
+            f"<code>/login ROLL_NUMBER PASSWORD</code>",
+            reply_markup=get_welcome_keyboard(),
+            parse_mode=ParseMode.HTML
+        )
+
+    context.user_data.pop("login_roll", None)
+    return ConversationHandler.END
+
+
 async def login_start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
-    """Initiates /login conversation. Enforces private chat for privacy."""
+    """Initiates /login conversation or immediately authenticates if arguments are passed."""
     chat = update.effective_chat
     if chat.type in [ChatType.GROUP, ChatType.SUPERGROUP, ChatType.CHANNEL]:
+        bot_username = context.bot.username or "AttendixBot"
+        buttons = [[InlineKeyboardButton("🔐 Open Bot to Login", url=f"https://t.me/{bot_username}?start=login")]]
         await update.effective_message.reply_text(
-            "⚠️ <b>Security Notice:</b> Account login cannot be performed in group chats for your privacy. "
-            "Please send /login directly to the bot in a private message.",
+            "⚠️ <b>Security Notice:</b> Account login cannot be performed in public group chats to protect your password. "
+            "Please click below to connect directly with the bot in a private message:",
+            reply_markup=InlineKeyboardMarkup(buttons),
             parse_mode=ParseMode.HTML
         )
         return ConversationHandler.END
 
+    # Check if user sent args with /login (e.g., /login 25695A0512 Saranya@512)
+    args = context.args or []
+    if len(args) >= 2:
+        roll = args[0].strip().upper()
+        password = " ".join(args[1:]).strip()
+        try:
+            await update.effective_message.delete()
+        except Exception:
+            pass
+        status_msg = await update.effective_chat.send_message(
+            "⏳ <i>Authenticating with MITS IMS portal... Please wait.</i>",
+            parse_mode=ParseMode.HTML
+        )
+        return await _execute_auth_and_respond(update, context, roll, password, status_msg)
+    elif len(args) == 1:
+        roll = args[0].strip().upper()
+        context.user_data["login_roll"] = roll
+        await update.effective_message.reply_text(
+            f"✅ Roll Number set to: <code>{html.escape(roll)}</code>\n\n"
+            "Now, please send your <b>MITS IMS Password</b>.\n\n"
+            "🔒 <i>Security Guarantee: For your safety, the bot will delete your password message "
+            "immediately upon receipt. Passwords are never logged or stored in plaintext.</i>",
+            parse_mode=ParseMode.HTML
+        )
+        return LOGIN_PASSWORD
+
     await update.effective_message.reply_text(
         "🔐 <b>Connect MITS IMS Account</b>\n\n"
-        "Please enter your <b>MITS IMS Username or Roll Number</b>\n"
-        "<i>(e.g., 25695A0514):</i>",
+        "Please enter your <b>MITS IMS Roll Number</b>\n"
+        "<i>(e.g., 25695A0512 or your college roll number)</i>:\n\n"
+        "💡 <i>Tip: You can also login in a single message by typing:</i>\n"
+        "<code>/login ROLL_NUMBER PASSWORD</code>",
         parse_mode=ParseMode.HTML
     )
     return LOGIN_ROLL
 
 
 async def login_receive_roll(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
-    """Receives candidate roll number."""
-    roll = update.message.text.strip().upper()
+    """Receives candidate roll number, or both roll and password if pasted together."""
+    raw_text = update.message.text.strip()
+    parts = raw_text.split(maxsplit=1)
+
+    # Detect if user entered both roll number and password in a single message
+    if len(parts) == 2 and len(parts[0]) >= 4:
+        roll = parts[0].strip().upper()
+        password = parts[1].strip()
+        try:
+            await update.message.delete()
+        except Exception:
+            pass
+        status_msg = await update.effective_chat.send_message(
+            "⏳ <i>Authenticating with MITS IMS portal... Please wait.</i>",
+            parse_mode=ParseMode.HTML
+        )
+        return await _execute_auth_and_respond(update, context, roll, password, status_msg)
+
+    roll = raw_text.upper()
     if len(roll) < 4:
         await update.message.reply_text("⚠️ Invalid roll number format. Please enter a valid MITS roll number:")
         return LOGIN_ROLL
@@ -489,7 +583,6 @@ async def login_receive_roll(update: Update, context: ContextTypes.DEFAULT_TYPE)
 async def login_receive_password(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
     """Receives candidate password, deletes message immediately, and authenticates."""
     password = update.message.text.strip()
-    telegram_id = update.effective_user.id
     roll = context.user_data.get("login_roll", "")
 
     # Attempt immediate password message deletion
@@ -503,34 +596,7 @@ async def login_receive_password(update: Update, context: ContextTypes.DEFAULT_T
         parse_mode=ParseMode.HTML
     )
 
-    auth_result = await authenticate_and_link(
-        telegram_id=telegram_id,
-        roll_number=roll,
-        password=password
-    )
-
-    if auth_result.get("success"):
-        clean_name = clean_student_name(auth_result.get("student_name"))
-        greeting = f"{roll} ({clean_name})" if clean_name else roll
-        await status_msg.edit_text(
-            f"🎉 <b>Authentication Successful!</b>\n\n"
-            f"Welcome, <b>{html.escape(greeting)}</b>! Your MITS IMS account has been linked to your Telegram profile.\n\n"
-            f"You can now check your attendance, subject percentages, and bunk advice anytime.",
-            reply_markup=get_main_menu_keyboard(),
-            parse_mode=ParseMode.HTML
-        )
-    else:
-        err = auth_result.get("error", "Invalid credentials or portal unreachable.")
-        await status_msg.edit_text(
-            f"❌ <b>Authentication Failed</b>\n\n"
-            f"Reason: <i>{html.escape(str(err))}</i>\n\n"
-            f"Please verify your credentials and try /login again.",
-            parse_mode=ParseMode.HTML
-        )
-
-    # Clear sensitive data from context
-    context.user_data.pop("login_roll", None)
-    return ConversationHandler.END
+    return await _execute_auth_and_respond(update, context, roll, password, status_msg)
 
 
 async def login_cancel(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
@@ -606,16 +672,18 @@ async def handle_callback_query(update: Update, context: ContextTypes.DEFAULT_TY
         if user:
             roll = user.get("roll_number", "")
             clean_name = clean_student_name(user.get("student_name"))
-            greeting = f"{roll} ({clean_name})" if clean_name else roll
+            greeting = f"{clean_name} ({roll})" if clean_name else roll
             text = (
-                f"👋 <b>Welcome, {html.escape(greeting)}!</b>\n\n"
+                f"👋 <b>Welcome back, {html.escape(greeting)}!</b>\n\n"
                 f"🎓 <b>Linked Roll Number:</b> <code>{html.escape(roll)}</code>\n\n"
                 f"Choose an option below:"
             )
             await query.edit_message_text(text, reply_markup=get_main_menu_keyboard(), parse_mode=ParseMode.HTML)
         else:
             await query.edit_message_text(
-                "👋 <b>Welcome to Attendix</b>\nYour MITS attendance, simplified.",
+                "👋 <b>Welcome to Attendix</b>\n"
+                "Your MITS attendance, simplified.\n\n"
+                "👥 Available for all MITS students across all branches and academic years.",
                 reply_markup=get_welcome_keyboard(),
                 parse_mode=ParseMode.HTML
             )
@@ -625,7 +693,7 @@ async def handle_callback_query(update: Update, context: ContextTypes.DEFAULT_TY
     if data == "btn_about":
         text = (
             "ℹ️ <b>About Attendix</b>\n\n"
-            "Attendix is an attendance management companion for students at "
+            "Attendix is an attendance management companion for all students at "
             "<b>Madanapalle Institute of Technology & Science (MITS)</b>.\n\n"
             "✨ <b>Features:</b>\n"
             "• Direct synchronization with MITS IMS portal\n"
@@ -645,7 +713,10 @@ async def handle_callback_query(update: Update, context: ContextTypes.DEFAULT_TY
     # 3. Login start trigger
     if data == "btn_login":
         await query.edit_message_text(
-            "🔐 To connect your account, please send <b>/login</b> in this chat.",
+            "🔐 <b>Connect MITS IMS Account</b>\n\n"
+            "To connect your account, please send:\n"
+            "<code>/login ROLL_NUMBER PASSWORD</code>\n\n"
+            "<i>(Or send /login to input your roll number and password step-by-step)</i>",
             parse_mode=ParseMode.HTML
         )
         return

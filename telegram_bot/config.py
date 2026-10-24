@@ -31,8 +31,13 @@ else:
 TELEGRAM_BOT_TOKEN = os.getenv("TELEGRAM_BOT_TOKEN", "").strip()
 
 # Database path (SQLite)
-DEFAULT_DB_PATH = str(BASE_DIR / "telegram_bot.db")
-DATABASE_PATH = os.getenv("DATABASE_PATH", DEFAULT_DB_PATH).strip()
+DEFAULT_DB_PATH = str((BASE_DIR / "telegram_bot.db").resolve())
+_raw_db = os.getenv("DATABASE_PATH", "").strip()
+if _raw_db:
+    _p = Path(_raw_db)
+    DATABASE_PATH = str(_p.resolve() if _p.is_absolute() else (PROJECT_ROOT / _p).resolve())
+else:
+    DATABASE_PATH = DEFAULT_DB_PATH
 
 # MITS IMS Base URL
 IMS_BASE_URL = os.getenv("IMS_BASE_URL", "http://mitsims.in").strip().rstrip("/")
@@ -43,11 +48,11 @@ try:
 except ValueError:
     CACHE_TTL_SECONDS = 300
 
-# Concurrency limits for scraping
+# Concurrency limits for scraping (supports multi-user concurrency)
 try:
-    MAX_CONCURRENT_SCRAPES = int(os.getenv("MAX_CONCURRENT_SCRAPES", "2"))
+    MAX_CONCURRENT_SCRAPES = int(os.getenv("MAX_CONCURRENT_SCRAPES", "10"))
 except ValueError:
-    MAX_CONCURRENT_SCRAPES = 2
+    MAX_CONCURRENT_SCRAPES = 10
 
 # Encryption Key management
 _ENV_KEY = os.getenv("CREDENTIAL_ENCRYPTION_KEY", "").strip()

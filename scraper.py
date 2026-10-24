@@ -38,6 +38,13 @@ def extract_student_name(html_text):
         "MAX", "MIN", "TOTAL CONDUCTED", "CLASSES", "DAY", "PERIOD", "HOUR"
     }
 
+    # 0. Check profileName displayfield (MITS IMS Left Sidebar)
+    m_prof = re.search(r"id\s*:\s*\\?['\"]profileName\\?['\"].*?value\s*:\s*\\?['\"](?:<span.*?>)?([^<>'\"\\]+)", html_text, re.IGNORECASE | re.DOTALL)
+    if m_prof:
+        candidate = BeautifulSoup(m_prof.group(1).strip(), "html.parser").get_text(strip=True)
+        if len(candidate) >= 3 and not candidate.isdigit() and candidate.upper() not in excluded and all(w.upper() not in excluded for w in candidate.upper().split()):
+            return candidate.title()
+
     # 1. Header pattern: "STUDENT NAME | CHANGE PASSWORD | LOGOUT"
     m_header = re.search(r'(?:welcome\s*[:,-]?\s*)?([A-Za-z\s\.\']+?)\s*\|\s*(?:CHANGE\s+PASSWORD|LOGOUT)', html_text, re.IGNORECASE)
     if m_header:
@@ -219,14 +226,23 @@ def _get_attendance_http(username, password):
             dash_url = f"{base_url}/gemsonline-student/dashboard.action?actionType=view"
             res_dash = session.get(dash_url, headers=headers, timeout=10)
 
-            # 4. Extract Student Name from studentIndex.html, Post response, or Dashboard response
+            # 4. Extract Student Name from getLeftSideBar.action, studentIndex.html, or Dashboard response
             student_name = None
             try:
-                idx_url = f"{base_url}/gemsonline-student/studentIndex.html"
-                res_idx = session.get(idx_url, headers=headers, timeout=5)
-                student_name = extract_student_name(res_idx.text)
-            except Exception:
-                pass
+                sb_url = f"{base_url}/gemsonline-student/getLeftSideBar.action"
+                res_sb = session.get(sb_url, headers=headers, timeout=6)
+                if res_sb.status_code == 200:
+                    student_name = extract_student_name(res_sb.text)
+            except Exception as e:
+                logger.debug(f"Sidebar extraction notice: {e}")
+
+            if not student_name:
+                try:
+                    idx_url = f"{base_url}/studentIndex.html"
+                    res_idx = session.get(idx_url, headers=headers, timeout=5)
+                    student_name = extract_student_name(res_idx.text)
+                except Exception:
+                    pass
 
             if not student_name:
                 student_name = extract_student_name(res_post.text)

@@ -19,6 +19,8 @@ logger = logging.getLogger("attendix_bot.database")
 def _get_db_path(custom_path: Optional[str] = None) -> str:
     path_str = custom_path or DATABASE_PATH
     p = Path(path_str)
+    if not p.is_absolute():
+        p = (Path(__file__).resolve().parent / p).resolve()
     p.parent.mkdir(parents=True, exist_ok=True)
     return str(p)
 
