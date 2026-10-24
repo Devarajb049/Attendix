@@ -5,3 +5,6 @@ users.json
 email_logs.json
 node_modules/
 .DS_Store
+*.db
+*.sqlite3
+.encryption_key

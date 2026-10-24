@@ -1,0 +1,17 @@
+# Local environment and secrets
+.env
+.encryption_key
+
+# SQLite databases
+*.db
+*.sqlite3
+*.db-journal
+
+# Python caches and bytecode
+__pycache__/
+*.py[cod]
+*$py.class
+.pytest_cache/
+
+# Logs
+*.log
