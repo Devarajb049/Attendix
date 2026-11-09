@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Terms of Use | Attendix — MITS Attendance Tracer</title>
+    <meta name="description" content="Terms of Use for Attendix, the MITS student attendance tracking web application.">
+    <meta name="robots" content="index, follow">
+    <link rel="canonical" href="https://attendix-dev.vercel.app/terms">
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#090d16">
+    <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Plus+Jakarta+Sans:wght@500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="style.css">
+    <meta name="adsense-client" content="ca-pub-9718572719666215">
+    <!-- Google AdSense verification & Auto Ads -->
+    <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-9718572719666215"
+         crossorigin="anonymous"></script>
+</head>
+<body>
+    <div class="background-glow">
+        <div class="glow-sphere sphere-1"></div>
+        <div class="glow-sphere sphere-2"></div>
+    </div>
+
+    <div class="app-container">
+        <header class="navbar glass-header">
+            <div class="brand">
+                <div class="brand-logo shadow-glow">
+                    <img src="/static/logo.png" alt="Attendix Logo" class="app-brand-img">
+                </div>
+                <div class="brand-text">
+                    <span class="brand-title">Attendix</span>
+                </div>
+            </div>
+            <div class="header-tools" style="display:flex;align-items:center;gap:8px;margin-left:auto;">
+                <button class="btn btn-outline btn-sm header-action-btn theme-toggle-btn" id="themeToggleBtn" title="Toggle Light/Dark Theme" aria-label="Toggle Theme">
+                    <i class="fa-solid fa-moon" id="themeToggleIcon"></i>
+                </button>
+            </div>
+        </header>
+
+        <main style="padding-top: 80px;">
+            <div class="public-page">
+                <a href="/" class="back-link"><i class="fa-solid fa-arrow-left"></i> Back to Attendix</a>
+
+                <h1>Terms of Use</h1>
+                <p class="page-meta">Last updated: November 2026 &nbsp;|&nbsp; Attendix — MITS Attendance Tracer</p>
+
+                <p>By accessing or using Attendix at <a href="https://attendix-dev.vercel.app/">attendix-dev.vercel.app</a>, you agree to these Terms of Use. If you do not agree, do not use the application.</p>
+
+                <h2>1. Description of Service</h2>
+                <p>Attendix is a free web application that allows MITS students to view their attendance data by authenticating with the official MITS IMS portal. It provides analytics, bunk advice, PDF reports, and a Progressive Web App (PWA) experience.</p>
+
+                <h2>2. Acceptable Use</h2>
+                <ul>
+                    <li>You must be a registered MITS student with valid IMS credentials to use attendance features.</li>
+                    <li>You may not use Attendix to access another student's attendance data without their explicit consent.</li>
+                    <li>You may not attempt to reverse-engineer, scrape, or abuse the Attendix service or the MITS IMS portal.</li>
+                    <li>You may not use Attendix for any unlawful purpose.</li>
+                </ul>
+
+                <h2>3. No Warranty</h2>
+                <p>Attendix is provided "as is" without any warranty of any kind, express or implied. We do not guarantee continuous availability, accuracy of attendance data, or fitness for any particular purpose. Attendance data is sourced directly from the MITS IMS portal; any inaccuracies originate there.</p>
+
+                <h2>4. Limitation of Liability</h2>
+                <p>To the fullest extent permitted by law, Attendix and its developer shall not be liable for any direct, indirect, incidental, or consequential damages arising from your use of this application.</p>
+
+                <h2>5. Intellectual Property</h2>
+                <p>Attendance data belongs to MITS and the respective students. The Attendix application code and design are the intellectual property of its developer. You may not reproduce or redistribute the application without permission.</p>
+
+                <h2>6. Advertising</h2>
+                <p>Attendix may display advertisements served by Google AdSense. These ads are placed on public-facing pages only and are clearly identified as advertisements. We are not responsible for the content of third-party advertisements.</p>
+
+                <h2>7. Changes to Terms</h2>
+                <p>We may update these Terms of Use at any time. Continued use of the application after changes constitutes acceptance of the revised terms.</p>
+
+                <h2>8. Governing Law</h2>
+                <p>These terms are governed by the laws of India. Any disputes shall be subject to the jurisdiction of courts in Andhra Pradesh, India.</p>
+
+                <h2>9. Contact</h2>
+                <p>For questions about these terms, please use our <a href="/contact">Contact page</a>.</p>
+
+                <div class="ad-container ad-inarticle" data-ad-slot="" style="display:none;" aria-label="Advertisement" role="complementary"></div>
+            </div>
+        </main>
+
+        <footer style="max-width: 760px; margin: 0 auto; padding: 1rem 1.5rem 2rem;">
+            <div class="ad-container ad-footer" data-ad-slot="" style="display:none;" aria-label="Advertisement" role="complementary"></div>
+            <p style="text-align:center; color: var(--text-muted); font-size: 0.8rem; margin-top: 1.5rem;">
+                &copy; 2026 Attendix — MITS Attendance Tracer &nbsp;|&nbsp;
+                <a href="/privacy" style="color: var(--primary);">Privacy</a> &nbsp;|&nbsp;
+                <a href="/terms" style="color: var(--primary);">Terms</a> &nbsp;|&nbsp;
+                <a href="/about" style="color: var(--primary);">About</a> &nbsp;|&nbsp;
+                <a href="/contact" style="color: var(--primary);">Contact</a>
+            </p>
+        </footer>
+    </div>
+
+    <div class="toast-container" id="toastContainer"></div>
+    <script src="app.js"></script>
+    <script src="ads.js"></script>
+</body>
+</html>

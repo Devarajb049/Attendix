@@ -2486,3 +2486,138 @@ select:focus-visible {
         transform: translateY(0) scale(1);
     }
 }
+
+
+/* ==========================================================================
+   ADSENSE AD CONTAINER STYLES
+   ========================================================================== */
+
+/* Base ad container — hidden by default; shown only when ads load */
+.ad-container {
+    display: block;
+    width: 100%;
+    overflow: hidden;
+    background: transparent;
+    border-radius: var(--radius-sm);
+    text-align: center;
+    /* Reserve minimum height to reduce Cumulative Layout Shift (CLS) */
+    min-height: 90px;
+    box-sizing: border-box;
+    /* Clearly label as advertisement */
+    position: relative;
+}
+
+/* Faint "Advertisement" label above ad slot */
+.ad-container::before {
+    content: "Advertisement";
+    display: block;
+    font-size: 0.65rem;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--text-muted);
+    opacity: 0.6;
+    margin-bottom: 4px;
+    font-family: var(--font-main);
+}
+
+/* Banner ad — full-width horizontal strip */
+.ad-banner {
+    min-height: 90px;
+    max-width: 100%;
+    margin: 1.5rem auto;
+    padding: 0.5rem 0;
+    border-top: 1px solid var(--bg-card-border);
+    border-bottom: 1px solid var(--bg-card-border);
+}
+
+/* In-article ad — fluid, embedded between content blocks */
+.ad-inarticle {
+    min-height: 250px;
+    max-width: 640px;
+    margin: 2rem auto;
+    padding: 0.5rem;
+}
+
+/* Footer ad — anchored to bottom of public pages */
+.ad-footer {
+    min-height: 90px;
+    max-width: 100%;
+    margin: 2rem auto 0;
+    padding: 1rem 0;
+    border-top: 1px solid var(--bg-card-border);
+}
+
+/* Responsive: stack ads neatly on mobile */
+@media (max-width: 600px) {
+    .ad-container {
+        min-height: 50px;
+    }
+    .ad-inarticle {
+        min-height: 100px;
+    }
+}
+
+/* Public page wrapper for policy / info pages */
+.public-page {
+    max-width: 760px;
+    margin: 0 auto;
+    padding: 2rem 1.5rem;
+    color: var(--text-primary);
+    font-family: var(--font-main);
+    line-height: 1.75;
+}
+
+.public-page h1 {
+    font-family: var(--font-heading);
+    font-size: 2rem;
+    font-weight: 800;
+    margin-bottom: 0.5rem;
+    color: var(--text-primary);
+}
+
+.public-page h2 {
+    font-family: var(--font-heading);
+    font-size: 1.25rem;
+    font-weight: 700;
+    margin: 2rem 0 0.5rem;
+    color: var(--primary);
+}
+
+.public-page p,
+.public-page li {
+    font-size: 0.95rem;
+    color: var(--text-secondary);
+    margin-bottom: 0.6rem;
+}
+
+.public-page ul,
+.public-page ol {
+    padding-left: 1.5rem;
+    margin-bottom: 1rem;
+}
+
+.public-page a {
+    color: var(--primary);
+    text-decoration: underline;
+}
+
+.public-page .page-meta {
+    font-size: 0.8rem;
+    color: var(--text-muted);
+    margin-bottom: 2rem;
+}
+
+.public-page .back-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    margin-bottom: 1.5rem;
+    font-size: 0.88rem;
+    color: var(--primary);
+    text-decoration: none;
+    font-weight: 600;
+}
+
+.public-page .back-link:hover {
+    text-decoration: underline;
+}

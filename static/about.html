@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>About | Attendix — MITS Attendance Tracer</title>
+    <meta name="description"
+        content="About Attendix — a free, real-time attendance tracking web app built for MITS students. Learn about features, the developer, and how it works.">
+    <meta name="robots" content="index, follow">
+    <link rel="canonical" href="https://attendix-dev.vercel.app/about">
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#090d16">
+    <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Plus+Jakarta+Sans:wght@500;600;700;800&display=swap"
+        rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="style.css">
+    <meta name="adsense-client" content="ca-pub-9718572719666215">
+    <!-- Google AdSense verification & Auto Ads -->
+    <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-9718572719666215"
+        crossorigin="anonymous"></script>
+</head>
+
+<body>
+    <div class="background-glow">
+        <div class="glow-sphere sphere-1"></div>
+        <div class="glow-sphere sphere-2"></div>
+    </div>
+
+    <div class="app-container">
+        <header class="navbar glass-header">
+            <div class="brand">
+                <div class="brand-logo shadow-glow">
+                    <img src="/static/logo.png" alt="Attendix Logo" class="app-brand-img">
+                </div>
+                <div class="brand-text">
+                    <span class="brand-title">Attendix</span>
+                </div>
+            </div>
+            <div class="header-tools" style="display:flex;align-items:center;gap:8px;margin-left:auto;">
+                <button class="btn btn-outline btn-sm header-action-btn theme-toggle-btn" id="themeToggleBtn"
+                    title="Toggle Light/Dark Theme" aria-label="Toggle Theme">
+                    <i class="fa-solid fa-moon" id="themeToggleIcon"></i>
+                </button>
+            </div>
+        </header>
+
+        <main style="padding-top: 80px;">
+            <div class="public-page">
+                <a href="/" class="back-link"><i class="fa-solid fa-arrow-left"></i> Back to Attendix</a>
+
+                <h1>About Attendix</h1>
+                <p class="page-meta">MITS Attendance Tracer — Free student attendance analytics</p>
+
+                <p><strong>Attendix</strong> (also known as MITS Attendance Tracer) is a free web application built
+                    specifically for students of <strong>Malla Reddy Institute of Technology and Science (MITS)</strong>
+                    to quickly and accurately check their attendance from the official IMS portal, analyze subject-wise
+                    data, and plan their schedules effectively.</p>
+
+                <div class="ad-container ad-banner" data-ad-slot="" style="display:none;" aria-label="Advertisement"
+                    role="complementary"></div>
+
+                <h2>Why Attendix?</h2>
+                <p>The official MITS IMS portal can be slow, session-heavy, and difficult to navigate on mobile.
+                    Attendix solves that by providing:</p>
+                <ul>
+                    <li>⚡ <strong>Instant scraping</strong> — attendance fetched directly from IMS in seconds.</li>
+                    <li>📊 <strong>Visual analytics</strong> — bar charts and doughnut risk distributions.</li>
+                    <li>🎯 <strong>Bunk Advisor</strong> — calculates exactly how many classes you can skip or must
+                        attend to reach your target (75%, 80%, 85%, or 90%).</li>
+                    <li>📄 <strong>PDF Reports</strong> — download a clean, printable attendance report.</li>
+                    <li>📱 <strong>PWA &amp; Mobile App</strong> — install on Android or iOS home screen for instant
+                        access.</li>
+                    <li>🌙 <strong>Dark / Light Theme</strong> — comfortable for any environment.</li>
+                    <li>🔒 <strong>Privacy First</strong> — credentials go directly to the MITS IMS server and are never
+                        stored externally.</li>
+                </ul>
+
+                <h2>How It Works</h2>
+                <ol>
+                    <li>You enter your MITS register number and IMS password.</li>
+                    <li>Attendix uses a headless Playwright browser to authenticate with the official MITS IMS portal on
+                        your behalf.</li>
+                    <li>Your attendance data is scraped, parsed, and returned securely to your browser session.</li>
+                    <li>Your credentials are never logged, stored in a database, or sent to any third party other than
+                        the MITS IMS server.</li>
+                </ol>
+
+                <h2>Technology Stack</h2>
+                <ul>
+                    <li><strong>Backend:</strong> Python · FastAPI · Playwright (headless Chromium)</li>
+                    <li><strong>Frontend:</strong> Vanilla HTML / CSS / JavaScript · Chart.js · jsPDF</li>
+                    <li><strong>Deployment:</strong> Vercel (web) · Docker</li>
+                    <li><strong>Mobile Companion:</strong> Android (Jetpack / Glance widgets) · iOS (WidgetKit)</li>
+                </ul>
+
+                <h2>Developer</h2>
+                <p>Attendix was designed and built by <a href="https://www.linkedin.com/in/bhojanapudevaraj/"
+                        target="_blank" rel="noopener noreferrer"><strong>Bhojanapu Deva Raj</strong></a>, a MITS
+                    student passionate about building tools that make student life easier.</p>
+
+                <h2>Open Source</h2>
+                <p>Attendix is an open project. Contributions, bug reports, and feature suggestions are welcome. See the
+                    README for details.</p>
+
+                <h2>Advertising</h2>
+                <p>Attendix is free and supported by Google AdSense advertising on public pages. Ads are clearly labeled
+                    and placed only where they do not interfere with attendance data or dashboard functionality. We
+                    appreciate your understanding — it helps keep the service free.</p>
+
+                <div class="ad-container ad-inarticle" data-ad-slot="" style="display:none;" aria-label="Advertisement"
+                    role="complementary"></div>
+            </div>
+        </main>
+
+        <footer style="max-width: 760px; margin: 0 auto; padding: 1rem 1.5rem 2rem;">
+            <div class="ad-container ad-footer" data-ad-slot="" style="display:none;" aria-label="Advertisement"
+                role="complementary"></div>
+            <p style="text-align:center; color: var(--text-muted); font-size: 0.8rem; margin-top: 1.5rem;">
+                &copy; 2026 Attendix — MITS Attendance Tracer &nbsp;|&nbsp;
+                <a href="/privacy" style="color: var(--primary);">Privacy</a> &nbsp;|&nbsp;
+                <a href="/terms" style="color: var(--primary);">Terms</a> &nbsp;|&nbsp;
+                <a href="/about" style="color: var(--primary);">About</a> &nbsp;|&nbsp;
+                <a href="/contact" style="color: var(--primary);">Contact</a>
+            </p>
+        </footer>
+    </div>
+
+    <div class="toast-container" id="toastContainer"></div>
+    <script src="app.js"></script>
+    <script src="ads.js"></script>
+</body>
+
+</html>

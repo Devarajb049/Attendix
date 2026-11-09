@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Contact | Attendix — MITS Attendance Tracer</title>
+    <meta name="description" content="Contact the Attendix development team for support, feedback, or questions about the MITS attendance tracking application.">
+    <meta name="robots" content="index, follow">
+    <link rel="canonical" href="https://attendix-dev.vercel.app/contact">
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#090d16">
+    <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Plus+Jakarta+Sans:wght@500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="style.css">
+    <meta name="adsense-client" content="ca-pub-9718572719666215">
+    <!-- Google AdSense verification & Auto Ads -->
+    <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-9718572719666215"
+         crossorigin="anonymous"></script>
+</head>
+<body>
+    <div class="background-glow">
+        <div class="glow-sphere sphere-1"></div>
+        <div class="glow-sphere sphere-2"></div>
+    </div>
+
+    <div class="app-container">
+        <header class="navbar glass-header">
+            <div class="brand">
+                <div class="brand-logo shadow-glow">
+                    <img src="/static/logo.png" alt="Attendix Logo" class="app-brand-img">
+                </div>
+                <div class="brand-text">
+                    <span class="brand-title">Attendix</span>
+                </div>
+            </div>
+            <div class="header-tools" style="display:flex;align-items:center;gap:8px;margin-left:auto;">
+                <button class="btn btn-outline btn-sm header-action-btn theme-toggle-btn" id="themeToggleBtn" title="Toggle Light/Dark Theme" aria-label="Toggle Theme">
+                    <i class="fa-solid fa-moon" id="themeToggleIcon"></i>
+                </button>
+            </div>
+        </header>
+
+        <main style="padding-top: 80px;">
+            <div class="public-page">
+                <a href="/" class="back-link"><i class="fa-solid fa-arrow-left"></i> Back to Attendix</a>
+
+                <h1>Contact</h1>
+                <p class="page-meta">Get in touch with the Attendix team</p>
+
+                <p>Have a question, found a bug, or want to suggest a feature? We'd love to hear from you.</p>
+
+                <h2><i class="fa-brands fa-linkedin" style="color:var(--primary)"></i> LinkedIn</h2>
+                <p>Reach the developer directly on LinkedIn:<br>
+                <a href="https://www.linkedin.com/in/bhojanapudevaraj/" target="_blank" rel="noopener noreferrer">linkedin.com/in/bhojanapudevaraj</a></p>
+
+                <h2><i class="fa-solid fa-bug" style="color:var(--status-warning)"></i> Bug Reports &amp; Feature Requests</h2>
+                <p>Please use the LinkedIn profile above to report bugs or request features. Provide as much detail as possible, including:</p>
+                <ul>
+                    <li>What you were trying to do.</li>
+                    <li>What happened (error message, unexpected behavior).</li>
+                    <li>Your browser and device type.</li>
+                </ul>
+
+                <h2><i class="fa-solid fa-shield-halved" style="color:var(--accent)"></i> Privacy &amp; Data Concerns</h2>
+                <p>For questions about how your data is handled, please read our <a href="/privacy">Privacy Policy</a>. For specific privacy concerns, contact us via LinkedIn.</p>
+
+                <h2><i class="fa-solid fa-rectangle-ad" style="color:var(--text-muted)"></i> Advertising</h2>
+                <p>Attendix uses Google AdSense to display advertisements on public pages. If you have concerns about an ad that appeared, you can report it via <a href="https://support.google.com/adsense" target="_blank" rel="noopener">Google AdSense support</a>.</p>
+
+                <div class="ad-container ad-banner" data-ad-slot="" style="display:none;" aria-label="Advertisement" role="complementary"></div>
+
+                <h2><i class="fa-solid fa-clock" style="color:var(--text-muted)"></i> Response Time</h2>
+                <p>This is an independent student project maintained in spare time. We'll do our best to respond within a few days.</p>
+            </div>
+        </main>
+
+        <footer style="max-width: 760px; margin: 0 auto; padding: 1rem 1.5rem 2rem;">
+            <div class="ad-container ad-footer" data-ad-slot="" style="display:none;" aria-label="Advertisement" role="complementary"></div>
+            <p style="text-align:center; color: var(--text-muted); font-size: 0.8rem; margin-top: 1.5rem;">
+                &copy; 2026 Attendix — MITS Attendance Tracer &nbsp;|&nbsp;
+                <a href="/privacy" style="color: var(--primary);">Privacy</a> &nbsp;|&nbsp;
+                <a href="/terms" style="color: var(--primary);">Terms</a> &nbsp;|&nbsp;
+                <a href="/about" style="color: var(--primary);">About</a> &nbsp;|&nbsp;
+                <a href="/contact" style="color: var(--primary);">Contact</a>
+            </p>
+        </footer>
+    </div>
+
+    <div class="toast-container" id="toastContainer"></div>
+    <script src="app.js"></script>
+    <script src="ads.js"></script>
+</body>
+</html>

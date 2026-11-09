@@ -45,6 +45,12 @@
     <meta name="apple-mobile-web-app-title" content="Attendix">
     <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
 
+    <!-- Google AdSense Publisher ID -->
+    <meta name="adsense-client" content="ca-pub-9718572719666215">
+    <!-- Google AdSense verification & Auto Ads -->
+    <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-9718572719666215"
+         crossorigin="anonymous"></script>
+
     <!-- Google Fonts: Inter & Plus Jakarta Sans -->
     <link
         href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Plus+Jakarta+Sans:wght@500;600;700;800&display=swap"
@@ -385,6 +391,12 @@
                             style="color: var(--primary); font-weight: 600; text-decoration: underline;">Bhojanapu Deva
                             Raj</a>
                     </p>
+                    <p style="margin-top: 8px; font-size: 0.75rem; color: var(--text-muted); text-align: center;">
+                        <a href="/about" style="color:var(--text-muted);">About</a> &nbsp;·&nbsp;
+                        <a href="/privacy" style="color:var(--text-muted);">Privacy</a> &nbsp;·&nbsp;
+                        <a href="/terms" style="color:var(--text-muted);">Terms</a> &nbsp;·&nbsp;
+                        <a href="/contact" style="color:var(--text-muted);">Contact</a>
+                    </p>
                 </div>
             </div>
 
@@ -402,6 +414,10 @@
                 <a href="https://moodle-dev.vercel.app/" target="_blank" rel="noopener noreferrer" class="btn btn-outline btn-sm" style="flex-shrink: 0; white-space: nowrap; text-decoration: none; border-radius: 999px; padding: 0.5rem 1rem; display: flex; align-items: center; gap: 0.4rem;">
                     <span>Open Moodle </span><i class="fa-solid fa-arrow-up-right-from-square" style="font-size: 0.8rem;"></i>
                 </a>
+            </div>
+            <!-- AdSense Banner — Public login page, below Moodle card; never near login fields -->
+            <!-- Replace data-ad-slot with your actual AdSense ad unit slot ID after approval -->
+            <div class="ad-container ad-banner" data-ad-slot="" style="display:none;" aria-label="Advertisement" role="complementary">
             </div>
         </main>
 
@@ -660,6 +676,8 @@
 
     <!-- Custom JS -->
     <script src="app.js"></script>
+    <!-- Attendix AdSense Loader (loads AdSense only when publisher ID is configured) -->
+    <script src="ads.js"></script>
 </body>
 
 </html>

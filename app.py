@@ -10,7 +10,7 @@ if sys.platform == "win32":
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
-from fastapi.responses import FileResponse, JSONResponse, Response
+from fastapi.responses import FileResponse, JSONResponse, Response, HTMLResponse
 from typing import Optional, List
 from datetime import datetime
 from pydantic import BaseModel, Field
@@ -93,6 +93,15 @@ async def serve_robots():
     return Response("User-agent: *\nAllow: /\n", media_type="text/plain")
 
 
+@app.get("/ads.txt", response_class=FileResponse)
+async def serve_ads_txt():
+    """Serve ads.txt at the root for Google AdSense authorized sellers verification."""
+    ads_txt_path = os.path.join(static_dir, "ads.txt")
+    if os.path.exists(ads_txt_path):
+        return FileResponse(ads_txt_path, media_type="text/plain")
+    return Response("", media_type="text/plain")
+
+
 @app.get("/sitemap.xml", response_class=FileResponse)
 async def serve_sitemap():
     sitemap_path = os.path.join(static_dir, "sitemap.xml")
@@ -150,6 +159,38 @@ async def serve_install_page():
     return FileResponse(os.path.join(static_dir, "index.html"))
 
 
+# -----------------------------------------------------------------------
+# Public policy & information pages
+# -----------------------------------------------------------------------
+
+@app.get("/privacy")
+@app.get("/privacy.html")
+async def serve_privacy():
+    p = os.path.join(static_dir, "privacy.html")
+    return FileResponse(p) if os.path.exists(p) else FileResponse(os.path.join(static_dir, "index.html"))
+
+
+@app.get("/terms")
+@app.get("/terms.html")
+async def serve_terms():
+    p = os.path.join(static_dir, "terms.html")
+    return FileResponse(p) if os.path.exists(p) else FileResponse(os.path.join(static_dir, "index.html"))
+
+
+@app.get("/about")
+@app.get("/about.html")
+async def serve_about():
+    p = os.path.join(static_dir, "about.html")
+    return FileResponse(p) if os.path.exists(p) else FileResponse(os.path.join(static_dir, "index.html"))
+
+
+@app.get("/contact")
+@app.get("/contact.html")
+async def serve_contact():
+    p = os.path.join(static_dir, "contact.html")
+    return FileResponse(p) if os.path.exists(p) else FileResponse(os.path.join(static_dir, "index.html"))
+
+
 @app.get("/404", response_class=FileResponse)
 @app.get("/404.html", response_class=FileResponse)
 async def serve_404_page():
@@ -170,6 +211,20 @@ async def custom_404_handler(request, exc):
 @app.get("/health")
 async def health_check():
     return {"status": "ok", "service": "MITS IMS Attendance Web"}
+
+
+@app.get("/api/config")
+async def get_public_config():
+    """
+    Returns non-sensitive public configuration to the frontend.
+    ADSENSE_CLIENT_ID env var overrides the default publisher ID.
+    Only values starting with 'ca-pub-' are exposed.
+    """
+    # Default confirmed publisher ID — override via ADSENSE_CLIENT_ID env var
+    default_id = "ca-pub-9718572719666215"
+    raw_id = os.environ.get("ADSENSE_CLIENT_ID", default_id).strip()
+    adsense_client = raw_id if raw_id.startswith("ca-pub-") else default_id
+    return {"adsense_client": adsense_client}
 
 
 @app.post("/api/attendance")
